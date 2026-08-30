@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>CIEDE2000 test</title></head>
+<body><pre id="out"></pre>
+<script>
+// Дословный перенос формулы из color_math.rb для проверки на эталонных парах Шармы.
+function deg2rad(d){return d*Math.PI/180}
+function rad2deg(r){return r*180/Math.PI}
+function hueDeg(b,ap){ if(b===0&&ap===0) return 0; var d=rad2deg(Math.atan2(b,ap)); return d<0?d+360:d; }
+function dE2000(lab1,lab2){
+  var l1=lab1[0],a1=lab1[1],b1=lab1[2],l2=lab2[0],a2=lab2[1],b2=lab2[2];
+  var c1=Math.sqrt(a1*a1+b1*b1), c2=Math.sqrt(a2*a2+b2*b2), cBar=(c1+c2)/2;
+  var g=0.5*(1-Math.sqrt(Math.pow(cBar,7)/(Math.pow(cBar,7)+Math.pow(25,7))));
+  var a1p=(1+g)*a1, a2p=(1+g)*a2;
+  var c1p=Math.sqrt(a1p*a1p+b1*b1), c2p=Math.sqrt(a2p*a2p+b2*b2);
+  var h1p=hueDeg(b1,a1p), h2p=hueDeg(b2,a2p);
+  var dlp=l2-l1, dcp=c2p-c1p, dhp;
+  if(c1p*c2p===0) dhp=0;
+  else if(Math.abs(h2p-h1p)<=180) dhp=h2p-h1p;
+  else if(h2p-h1p>180) dhp=h2p-h1p-360;
+  else dhp=h2p-h1p+360;
+  var dHp=2*Math.sqrt(c1p*c2p)*Math.sin(deg2rad(dhp)/2);
+  var lBar=(l1+l2)/2, cpBar=(c1p+c2p)/2, hBar;
+  if(c1p*c2p===0) hBar=h1p+h2p;
+  else if(Math.abs(h1p-h2p)<=180) hBar=(h1p+h2p)/2;
+  else if(h1p+h2p<360) hBar=(h1p+h2p+360)/2;
+  else hBar=(h1p+h2p-360)/2;
+  var t=1-0.17*Math.cos(deg2rad(hBar-30))+0.24*Math.cos(deg2rad(2*hBar))
+       +0.32*Math.cos(deg2rad(3*hBar+6))-0.20*Math.cos(deg2rad(4*hBar-63));
+  var dTheta=30*Math.exp(-Math.pow((hBar-275)/25,2));
+  var rC=2*Math.sqrt(Math.pow(cpBar,7)/(Math.pow(cpBar,7)+Math.pow(25,7)));
+  var sL=1+0.015*Math.pow(lBar-50,2)/Math.sqrt(20+Math.pow(lBar-50,2));
+  var sC=1+0.045*cpBar, sH=1+0.015*cpBar*t;
+  var rT=-Math.sin(deg2rad(2*dTheta))*rC;
+  return Math.sqrt(Math.pow(dlp/sL,2)+Math.pow(dcp/sC,2)+Math.pow(dHp/sH,2)
+                   +rT*(dcp/sC)*(dHp/sH));
+}
+// Эталонные пары Sharma, Wu & Dalal (2005)
+var cases=[
+ [[50,2.6772,-79.7751],[50,0,-82.7485],2.0425],
+ [[50,3.1571,-77.2803],[50,0,-82.7485],2.8615],
+ [[50,2.8361,-74.0200],[50,0,-82.7485],3.4412],
+ [[50,-1.3802,-84.2814],[50,0,-82.7485],1.0000],
+ [[50,-1.1848,-84.8006],[50,0,-82.7485],1.0000],
+ [[50,-0.9009,-85.5211],[50,0,-82.7485],1.0000],
+ [[50,0,0],[50,-1,2],2.3669],
+ [[50,-1,2],[50,0,0],2.3669],
+ [[50,2.5,0],[73,25,-18],27.1492],
+ [[50,2.5,0],[61,-5,29],22.8977],
+ [[50,2.5,0],[56,-27,-3],31.9030],
+ [[50,2.5,0],[58,24,15],19.4535]
+];
+var out=[], pass=0;
+cases.forEach(function(c,i){
+  var got=dE2000(c[0],c[1]);
+  var ok=Math.abs(got-c[2])<0.0001;
+  if(ok) pass++;
+  out.push((ok?'PASS':'FAIL')+'  #'+(i+1)+'  expected '+c[2].toFixed(4)+'  got '+got.toFixed(4));
+});
+out.push(pass+'/'+cases.length+' passed');
+document.getElementById('out').textContent=out.join('\n');
+</script></body></html>

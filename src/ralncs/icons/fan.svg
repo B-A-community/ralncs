@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Веер цветов: лопасти вращаются вокруг нижней точки -->
+  <g transform="rotate(-54 12 19.5)">
+    <rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#C1121F"/>
+  </g>
+  <g transform="rotate(-18 12 19.5)">
+    <rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#F2A900"/>
+  </g>
+  <g transform="rotate(18 12 19.5)">
+    <rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#2F855A"/>
+  </g>
+  <g transform="rotate(54 12 19.5)">
+    <rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#2B6CB0"/>
+  </g>
+  <circle cx="12" cy="19.5" r="2.6" fill="#3B3B38"/>
+  <circle cx="12" cy="19.5" r="1.1" fill="#F5F5F4"/>
+</svg>

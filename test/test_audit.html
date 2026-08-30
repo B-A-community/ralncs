@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>RALNCS — анализ материалов</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font: 13px/1.45 "Segoe UI", system-ui, sans-serif;
+    color: #1c1c1c; background: #f5f5f4;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  header {
+    padding: 10px 14px; background: #fff; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  header .spacer { flex: 1; }
+  button {
+    font: inherit; padding: 6px 12px; border: 1px solid #bbb; border-radius: 6px;
+    background: #fff; cursor: pointer;
+  }
+  button:hover { background: #f0f0ef; }
+  button.primary { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+  button.primary:hover { background: #245a94; }
+  label.opt { display: flex; align-items: center; gap: 5px; user-select: none; }
+  #status { padding: 6px 14px; color: #666; }
+  #wrap { flex: 1; overflow: auto; padding: 0 14px 14px; }
+  table { border-collapse: collapse; width: 100%; background: #fff; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
+  th { position: sticky; top: 0; background: #fafaf9; border-bottom: 1px solid #ddd; z-index: 1; }
+  td.matname { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+  .sw {
+    display: inline-block; width: 22px; height: 22px; border-radius: 4px;
+    border: 1px solid rgba(0,0,0,.2); vertical-align: middle; margin-right: 7px;
+  }
+  .code { font-weight: 600; }
+  .hex { color: #888; font-size: 11px; }
+  .de { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; color: #fff; }
+  .de0 { background: #2f855a; }  /* < 1: отлично */
+  .de1 { background: #68a63e; }  /* < 2: хорошо */
+  .de2 { background: #dd8a20; }  /* < 5: заметно */
+  .de3 { background: #c53030; }  /* >= 5: вне палитры */
+  #toast {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: #1c1c1c; color: #fff; padding: 8px 16px; border-radius: 8px;
+    opacity: 0; transition: opacity .25s; pointer-events: none;
+  }
+  #toast.on { opacity: .92; }
+</style>
+</head>
+<body>
+  <header>
+    <label class="opt"><input type="checkbox" id="checkAll" checked> все</label>
+    <button id="btnCopy" class="primary">Скопировать ТЗ (в Google Таблицы)</button>
+    <button id="btnApplyRal">Применить RAL</button>
+    <button id="btnApplyNcs">Применить NCS</button>
+    <label class="opt"><input type="checkbox" id="optRename" checked> переименовывать материалы</label>
+    <span class="spacer"></span>
+    <button id="btnRescan">Обновить</button>
+  </header>
+  <div id="status"></div>
+  <div id="wrap">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Материал</th>
+          <th>Ближайший RAL</th>
+          <th>ΔE</th>
+          <th>Ближайший NCS</th>
+          <th>ΔE</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div id="toast"></div>
+
+<script>
+  var DATA = { rows: [], skipped: 0 };
+
+  function deClass(de) {
+    if (de < 1) return 'de0';
+    if (de < 2) return 'de1';
+    if (de < 5) return 'de2';
+    return 'de3';
+  }
+  function deTitle(de) {
+    if (de < 1) return 'отличное совпадение';
+    if (de < 2) return 'хорошее совпадение';
+    if (de < 5) return 'заметная разница';
+    return 'цвет вне палитры';
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+  }
+
+  function init(data) {
+    DATA = data;
+    var tbody = document.getElementById('rows');
+    tbody.innerHTML = data.rows.map(function (r, i) {
+      return '<tr>' +
+        '<td><input type="checkbox" class="rowcheck" data-i="' + i + '" checked></td>' +
+        '<td class="matname" title="' + esc(r.display_name) + '">' +
+          '<span class="sw" style="background:' + r.hex + '"></span>' +
+          esc(r.display_name) + ' <span class="hex">' + r.hex + '</span></td>' +
+        '<td><span class="sw" style="background:' + r.ral.hex + '"></span>' +
+          '<span class="code">' + esc(r.ral.code) + '</span> ' + esc(r.ral.name || '') +
+          ' <span class="hex">' + r.ral.hex + '</span></td>' +
+        '<td><span class="de ' + deClass(r.ral.de) + '" title="' + deTitle(r.ral.de) + '">' +
+          r.ral.de.toFixed(1) + '</span></td>' +
+        '<td><span class="sw" style="background:' + r.ncs.hex + '"></span>' +
+          '<span class="code">' + esc(r.ncs.code) + '</span>' +
+          ' <span class="hex">' + r.ncs.hex + '</span></td>' +
+        '<td><span class="de ' + deClass(r.ncs.de) + '" title="' + deTitle(r.ncs.de) + '">' +
+          r.ncs.de.toFixed(1) + '</span></td>' +
+        '</tr>';
+    }).join('');
+
+    var status = 'Однотонных материалов: ' + data.rows.length;
+    if (data.skipped > 0) status += ' • пропущено текстурных: ' + data.skipped;
+    status += ' • ΔE — визуальная разница с экранным цветом (меньше — точнее)';
+    document.getElementById('status').textContent = status;
+    document.getElementById('checkAll').checked = true;
+  }
+
+  function checkedRows() {
+    var out = [];
+    document.querySelectorAll('.rowcheck:checked').forEach(function (cb) {
+      out.push(DATA.rows[parseInt(cb.dataset.i, 10)]);
+    });
+    return out;
+  }
+
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    setTimeout(function () { t.classList.remove('on'); }, 2200);
+  }
+
+  // Колонки ТЗ. Пустые колонки «Цвет» в TSV держат сетку; в HTML-формате
+  // буфера те же ячейки уходят с background-color — Google Таблицы и Excel
+  // сохраняют заливку при вставке.
+  function tzCells(r) {
+    return [
+      { v: r.display_name },
+      { v: '', bg: r.hex },
+      { v: r.hex },
+      { v: r.ral.code },
+      { v: r.ral.name || '' },
+      { v: '', bg: r.ral.hex },
+      { v: r.ral.hex },
+      { v: r.ral.de.toFixed(1) },
+      { v: r.ncs.code },
+      { v: '', bg: r.ncs.hex },
+      { v: r.ncs.hex },
+      { v: r.ncs.de.toFixed(1) }
+    ];
+  }
+  var TZ_HEADER = ['Материал', 'Цвет', 'HEX в модели',
+                   'RAL', 'Название RAL', 'Цвет RAL', 'RAL HEX', 'ΔE RAL',
+                   'NCS', 'Цвет NCS', 'NCS HEX', 'ΔE NCS'];
+
+  function buildTsv(rows) {
+    var lines = [TZ_HEADER.join('\t')];
+    rows.forEach(function (r) {
+      lines.push(tzCells(r).map(function (c) { return c.v; }).join('\t'));
+    });
+    return lines.join('\n');
+  }
+
+  function buildHtmlTable(rows) {
+    var head = '<tr>' + TZ_HEADER.map(function (h) {
+      return '<td style="font-weight:bold">' + esc(h) + '</td>';
+    }).join('') + '</tr>';
+    var body = rows.map(function (r) {
+      return '<tr>' + tzCells(r).map(function (c) {
+        var style = c.bg ? ' style="background-color:' + c.bg + '"' : '';
+        return '<td' + style + '>' + esc(c.v) + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    return '<table>' + head + body + '</table>';
+  }
+
+  function copyBoth(tsv, html, onDone) {
+    function legacy() {
+      var ta = document.createElement('textarea');
+      ta.value = tsv;
+      document.body.appendChild(ta);
+      ta.select();
+      function handler(e) {
+        e.clipboardData.setData('text/plain', tsv);
+        e.clipboardData.setData('text/html', html);
+        e.preventDefault();
+      }
+      document.addEventListener('copy', handler);
+      try { document.execCommand('copy'); } finally {
+        document.removeEventListener('copy', handler);
+        document.body.removeChild(ta);
+      }
+      onDone();
+    }
+    if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+      var item = new ClipboardItem({
+        'text/plain': new Blob([tsv], { type: 'text/plain' }),
+        'text/html': new Blob([html], { type: 'text/html' })
+      });
+      navigator.clipboard.write([item]).then(onDone, legacy);
+    } else {
+      legacy();
+    }
+  }
+
+  function copyTsv() {
+    var rows = checkedRows();
+    if (!rows.length) { toast('Не выбрано ни одного материала'); return; }
+    copyBoth(buildTsv(rows), buildHtmlTable(rows), function () {
+      toast('Скопировано: ' + rows.length + ' строк. Вставьте в Google Таблицу (Ctrl+V) — колонки «Цвет» придут с заливкой.');
+    });
+  }
+
+  function apply(palette) {
+    var rows = checkedRows();
+    if (!rows.length) { toast('Не выбрано ни одного материала'); return; }
+    var label = palette.toUpperCase();
+    if (!confirm('Перекрасить ' + rows.length + ' материал(ов) в точные цвета ' + label +
+                 '? Действие можно отменить (Ctrl+Z).')) return;
+    sketchup.apply(JSON.stringify({
+      palette: palette,
+      rename: document.getElementById('optRename').checked,
+      names: rows.map(function (r) { return r.name; })
+    }));
+  }
+
+  document.getElementById('btnCopy').addEventListener('click', copyTsv);
+  document.getElementById('btnApplyRal').addEventListener('click', function () { apply('ral'); });
+  document.getElementById('btnApplyNcs').addEventListener('click', function () { apply('ncs'); });
+  document.getElementById('btnRescan').addEventListener('click', function () { sketchup.rescan(); });
+  document.getElementById('checkAll').addEventListener('change', function (e) {
+    document.querySelectorAll('.rowcheck').forEach(function (cb) { cb.checked = e.target.checked; });
+  });
+
+  window.addEventListener('DOMContentLoaded', function () { sketchup.ready(); });
+</script>
+<script>window.sketchup={ready:function(){},rescan:function(){console.log('rescan')},apply:function(j){console.log('apply',j)}};</script>
+<script src="fan_data.js"></script>
+<script src="colormatch.js"></script>
+</body>
+</html>

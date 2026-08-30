@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>RALNCS — веер цветов</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font: 13px/1.45 "Segoe UI", system-ui, sans-serif;
+    color: #1c1c1c; background: #f5f5f4;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  header {
+    padding: 10px 14px; background: #fff; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .tab {
+    padding: 6px 16px; border: 1px solid #bbb; border-radius: 6px;
+    background: #fff; cursor: pointer; font: inherit;
+  }
+  .tab.on { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+  #search {
+    flex: 1; max-width: 300px; font: inherit; padding: 6px 10px;
+    border: 1px solid #bbb; border-radius: 6px;
+  }
+  #main { flex: 1; display: flex; overflow: hidden; }
+  #groups { flex: 1; overflow: auto; padding: 12px 14px; }
+  .group h3 { font-size: 12px; color: #666; margin: 12px 0 6px; font-weight: 600; }
+  .grid { display: flex; flex-wrap: wrap; gap: 4px; }
+  .cell {
+    width: 27px; height: 27px; border-radius: 5px; cursor: pointer;
+    border: 1px solid rgba(0,0,0,.15);
+  }
+  .cell:hover { outline: 2px solid #2b6cb0; outline-offset: 1px; }
+  .cell.sel { outline: 3px solid #1c1c1c; outline-offset: 1px; }
+  #side {
+    width: 250px; background: #fff; border-left: 1px solid #ddd;
+    padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  }
+  #bigsw { width: 100%; height: 120px; border-radius: 8px; border: 1px solid rgba(0,0,0,.2); }
+  #selcode { font-size: 16px; font-weight: 700; }
+  #selname { color: #555; min-height: 18px; }
+  #selvals { color: #888; font-size: 12px; white-space: pre-line; }
+  #side button {
+    font: inherit; padding: 8px 12px; border: 1px solid #bbb; border-radius: 6px;
+    background: #fff; cursor: pointer;
+  }
+  #side button:hover { background: #f0f0ef; }
+  #side button.primary { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+  #side button.primary:hover { background: #245a94; }
+  #side button:disabled { opacity: .4; cursor: default; }
+  footer {
+    padding: 7px 14px; background: #fff; border-top: 1px solid #ddd;
+    color: #888; font-size: 11px;
+  }
+  #toast {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    background: #1c1c1c; color: #fff; padding: 8px 16px; border-radius: 8px;
+    opacity: 0; transition: opacity .25s; pointer-events: none;
+  }
+  #toast.on { opacity: .92; }
+</style>
+</head>
+<body>
+  <header>
+    <button class="tab on" id="tabRal">RAL Classic</button>
+    <button class="tab" id="tabNcs">NCS 1950</button>
+    <input id="search" type="search" placeholder="Поиск: 3020, traffic, 0580-Y80R…">
+  </header>
+  <div id="main">
+    <div id="groups"></div>
+    <div id="side">
+      <div id="bigsw"></div>
+      <div id="selcode">Выберите цвет</div>
+      <div id="selname"></div>
+      <div id="selvals"></div>
+      <button id="btnMat" class="primary" disabled>Создать материал</button>
+      <button id="btnPaint" disabled>Создать и красить</button>
+    </div>
+  </div>
+  <footer>
+    Цвета показаны в sRGB-приближении для экрана. Мониторы передают цвет по-разному —
+    финальное решение сверяйте с физическим веером RAL/NCS.
+  </footer>
+  <div id="toast"></div>
+
+<script>
+  var DATA = { ral: [], ncs: [] };
+  var activeTab = 'ral';
+  var selected = null;
+
+  var RAL_GROUPS = {
+    '1': 'RAL 1xxx — жёлтые', '2': 'RAL 2xxx — оранжевые', '3': 'RAL 3xxx — красные',
+    '4': 'RAL 4xxx — фиолетовые', '5': 'RAL 5xxx — синие', '6': 'RAL 6xxx — зелёные',
+    '7': 'RAL 7xxx — серые', '8': 'RAL 8xxx — коричневые', '9': 'RAL 9xxx — белые и чёрные'
+  };
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+  }
+
+  // "NCS S 2002-G50Y" -> {nuance: "2002", hue: "G50Y"}
+  function parseNcs(code) {
+    var m = code.match(/(\d{4})-([A-Z0-9]+)$/);
+    return m ? { nuance: m[1], hue: m[2] } : { nuance: '0000', hue: 'N' };
+  }
+
+  // Порядок оттенков по цветовому кругу NCS: Y -> R -> B -> G -> Y
+  function hueOrder(hue) {
+    if (hue === 'N') return -1;
+    var base = { Y: 0, R: 100, B: 200, G: 300 };
+    var m = hue.match(/^([YRBG])(\d{2})([YRBG])$/);
+    if (m) return base[m[1]] + parseInt(m[2], 10);
+    return base[hue] !== undefined ? base[hue] : 999;
+  }
+
+  function buildGroups() {
+    var list = DATA[activeTab];
+    var groups = {}; // title -> {order, items}
+    list.forEach(function (c, idx) {
+      var title, order;
+      if (activeTab === 'ral') {
+        var digit = (c.code.match(/RAL (\d)/) || [])[1] || '?';
+        title = RAL_GROUPS[digit] || 'Прочие';
+        order = parseInt(digit, 10) || 99;
+      } else {
+        var p = parseNcs(c.code);
+        title = p.hue === 'N' ? 'Нейтральные (N)' : 'Оттенок ' + p.hue;
+        order = hueOrder(p.hue);
+      }
+      if (!groups[title]) groups[title] = { order: order, items: [] };
+      groups[title].items.push(idx);
+    });
+
+    if (activeTab === 'ncs') {
+      Object.keys(groups).forEach(function (t) {
+        groups[t].items.sort(function (a, b) {
+          return parseNcs(DATA.ncs[a].code).nuance.localeCompare(parseNcs(DATA.ncs[b].code).nuance);
+        });
+      });
+    }
+
+    var html = Object.keys(groups)
+      .sort(function (a, b) { return groups[a].order - groups[b].order; })
+      .map(function (title) {
+        var cells = groups[title].items.map(function (idx) {
+          var c = DATA[activeTab][idx];
+          return '<div class="cell" data-i="' + idx + '" title="' + esc(c.code) +
+                 (c.name ? ' — ' + esc(c.name) : '') + '" style="background:' + c.hex + '"></div>';
+        }).join('');
+        return '<div class="group"><h3>' + esc(title) + '</h3><div class="grid">' + cells + '</div></div>';
+      }).join('');
+    document.getElementById('groups').innerHTML = html;
+    applySearch();
+  }
+
+  function applySearch() {
+    var q = document.getElementById('search').value.trim().toLowerCase().replace(/\s+/g, '');
+    document.querySelectorAll('.group').forEach(function (g) {
+      var visible = 0;
+      g.querySelectorAll('.cell').forEach(function (cell) {
+        var c = DATA[activeTab][parseInt(cell.dataset.i, 10)];
+        var hay = (c.code + (c.name || '') + c.hex).toLowerCase().replace(/\s+/g, '');
+        var show = !q || hay.indexOf(q) !== -1;
+        cell.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      g.style.display = visible ? '' : 'none';
+    });
+  }
+
+  function select(idx) {
+    selected = DATA[activeTab][idx];
+    document.querySelectorAll('.cell.sel').forEach(function (c) { c.classList.remove('sel'); });
+    var cell = document.querySelector('.cell[data-i="' + idx + '"]');
+    if (cell) cell.classList.add('sel');
+    document.getElementById('bigsw').style.background = selected.hex;
+    document.getElementById('selcode').textContent = selected.code;
+    document.getElementById('selname').textContent = selected.name || '';
+    document.getElementById('selvals').textContent =
+      selected.hex + '\nRGB ' + selected.rgb.join(', ');
+    document.getElementById('btnMat').disabled = false;
+    document.getElementById('btnPaint').disabled = false;
+  }
+
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    setTimeout(function () { t.classList.remove('on'); }, 2000);
+  }
+
+  function makeMaterial(paint) {
+    if (!selected) return;
+    sketchup.make_material(JSON.stringify({
+      code: selected.code, name: selected.name || null,
+      hex: selected.hex, rgb: selected.rgb, paint: paint
+    }));
+    toast(paint ? 'Материал создан — инструмент «Заливка» активен'
+                : 'Материал «' + selected.code + '» создан');
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    selected = null;
+    document.getElementById('tabRal').classList.toggle('on', tab === 'ral');
+    document.getElementById('tabNcs').classList.toggle('on', tab === 'ncs');
+    document.getElementById('btnMat').disabled = true;
+    document.getElementById('btnPaint').disabled = true;
+    document.getElementById('selcode').textContent = 'Выберите цвет';
+    document.getElementById('selname').textContent = '';
+    document.getElementById('selvals').textContent = '';
+    document.getElementById('bigsw').style.background = '';
+    buildGroups();
+  }
+
+  function init(data) {
+    DATA = data;
+    buildGroups();
+  }
+
+  document.getElementById('tabRal').addEventListener('click', function () { switchTab('ral'); });
+  document.getElementById('tabNcs').addEventListener('click', function () { switchTab('ncs'); });
+  document.getElementById('search').addEventListener('input', applySearch);
+  document.getElementById('groups').addEventListener('click', function (e) {
+    var cell = e.target.closest('.cell');
+    if (cell) select(parseInt(cell.dataset.i, 10));
+  });
+  document.getElementById('btnMat').addEventListener('click', function () { makeMaterial(false); });
+  document.getElementById('btnPaint').addEventListener('click', function () { makeMaterial(true); });
+
+  window.addEventListener('DOMContentLoaded', function () { sketchup.ready(); });
+</script>
+<script>window.sketchup={ready:function(){},make_material:function(j){console.log('make_material',j)}};</script>
+<script src="fan_data.js"></script>
+<script>init(FAN_DATA);</script>
+</body>
+</html>
