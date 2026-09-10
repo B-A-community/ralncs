@@ -35,6 +35,10 @@
   }
   .code { font-weight: 600; }
   .hex { color: #888; font-size: 11px; }
+  .tex {
+    display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px;
+    background: #ececea; color: #777; border: 1px solid #ddd; margin-left: 6px;
+  }
   .de { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; color: #fff; }
   .de0 { background: #2f855a; }  /* < 1: отлично */
   .de1 { background: #68a63e; }  /* < 2: хорошо */
@@ -54,7 +58,6 @@
     <button id="btnCopy" class="primary">Скопировать ТЗ (в Google Таблицы)</button>
     <button id="btnApplyRal">Применить RAL</button>
     <button id="btnApplyNcs">Применить NCS</button>
-    <label class="opt"><input type="checkbox" id="optRename" checked> переименовывать материалы</label>
     <span class="spacer"></span>
     <button id="btnRescan">Обновить</button>
   </header>
@@ -102,9 +105,11 @@
     tbody.innerHTML = data.rows.map(function (r, i) {
       return '<tr>' +
         '<td><input type="checkbox" class="rowcheck" data-i="' + i + '" checked></td>' +
-        '<td class="matname" title="' + esc(r.display_name) + '">' +
+        '<td class="matname" title="' + esc(r.display_name) +
+          (r.textured ? ' — цвет усреднён по текстуре' : '') + '">' +
           '<span class="sw" style="background:' + r.hex + '"></span>' +
-          esc(r.display_name) + ' <span class="hex">' + r.hex + '</span></td>' +
+          esc(r.display_name) + ' <span class="hex">' + r.hex + '</span>' +
+          (r.textured ? '<span class="tex">текстура</span>' : '') + '</td>' +
         '<td><span class="sw" style="background:' + r.ral.hex + '"></span>' +
           '<span class="code">' + esc(r.ral.code) + '</span> ' + esc(r.ral.name || '') +
           ' <span class="hex">' + r.ral.hex + '</span></td>' +
@@ -118,8 +123,9 @@
         '</tr>';
     }).join('');
 
-    var status = 'Однотонных материалов: ' + data.rows.length;
-    if (data.skipped > 0) status += ' • пропущено текстурных: ' + data.skipped;
+    var status = 'Материалов: ' + data.rows.length +
+                 ' (однотонных ' + data.solid + ', текстурных ' + data.textured + ')';
+    if (data.textured > 0) status += ' • у текстурных цвет усреднён по текстуре';
     status += ' • ΔE — визуальная разница с экранным цветом (меньше — точнее)';
     document.getElementById('status').textContent = status;
     document.getElementById('checkAll').checked = true;
@@ -140,28 +146,39 @@
     setTimeout(function () { t.classList.remove('on'); }, 2200);
   }
 
+  // "#F0D3D0" -> "240-211-208" — формат RGB, принятый в ТЗ на фасады.
+  function hexToRgbStr(hex) {
+    var h = hex.replace('#', '');
+    return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16),
+            parseInt(h.substr(4, 2), 16)].join('-');
+  }
+
   // Колонки ТЗ. Пустые колонки «Цвет» в TSV держат сетку; в HTML-формате
   // буфера те же ячейки уходят с background-color — Google Таблицы и Excel
   // сохраняют заливку при вставке.
   function tzCells(r) {
     return [
       { v: r.display_name },
+      { v: r.textured ? 'текстура' : 'заливка' },
       { v: '', bg: r.hex },
       { v: r.hex },
+      { v: hexToRgbStr(r.hex) },
       { v: r.ral.code },
       { v: r.ral.name || '' },
       { v: '', bg: r.ral.hex },
       { v: r.ral.hex },
+      { v: hexToRgbStr(r.ral.hex) },
       { v: r.ral.de.toFixed(1) },
       { v: r.ncs.code },
       { v: '', bg: r.ncs.hex },
       { v: r.ncs.hex },
+      { v: hexToRgbStr(r.ncs.hex) },
       { v: r.ncs.de.toFixed(1) }
     ];
   }
-  var TZ_HEADER = ['Материал', 'Цвет', 'HEX в модели',
-                   'RAL', 'Название RAL', 'Цвет RAL', 'RAL HEX', 'ΔE RAL',
-                   'NCS', 'Цвет NCS', 'NCS HEX', 'ΔE NCS'];
+  var TZ_HEADER = ['Материал', 'Тип', 'Цвет', 'HEX в модели', 'RGB в модели',
+                   'RAL', 'Название RAL', 'Цвет RAL', 'RAL HEX', 'RAL RGB', 'ΔE RAL',
+                   'NCS', 'Цвет NCS', 'NCS HEX', 'NCS RGB', 'ΔE NCS'];
 
   function buildTsv(rows) {
     var lines = [TZ_HEADER.join('\t')];
@@ -224,13 +241,21 @@
   function apply(palette) {
     var rows = checkedRows();
     if (!rows.length) { toast('Не выбрано ни одного материала'); return; }
+    var solid = rows.filter(function (r) { return !r.textured; });
+    if (!solid.length) {
+      toast('Среди выбранных только текстурные материалы — их перекраска затонировала бы текстуру');
+      return;
+    }
     var label = palette.toUpperCase();
-    if (!confirm('Перекрасить ' + rows.length + ' материал(ов) в точные цвета ' + label +
-                 '? Действие можно отменить (Ctrl+Z).')) return;
+    var msg = 'Перекрасить ' + solid.length + ' однотонных материал(ов) в точные цвета ' + label + '?';
+    if (rows.length > solid.length) {
+      msg += '\nТекстурные (' + (rows.length - solid.length) + ' шт.) не трогаем — перекраска тонирует текстуру.';
+    }
+    msg += '\nДействие можно отменить (Ctrl+Z).';
+    if (!confirm(msg)) return;
     sketchup.apply(JSON.stringify({
       palette: palette,
-      rename: document.getElementById('optRename').checked,
-      names: rows.map(function (r) { return r.name; })
+      names: solid.map(function (r) { return r.name; })
     }));
   }
 

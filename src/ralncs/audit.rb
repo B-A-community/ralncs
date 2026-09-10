@@ -1,6 +1,9 @@
-# Анализ материалов модели: для каждого однотонного материала подбирает
-# ближайшие RAL и NCS, показывает таблицу-ТЗ, умеет копировать TSV
-# (для вставки в Google Таблицы) и перекрашивать материалы в точные цвета.
+# Анализ материалов модели: для каждого материала подбирает ближайшие
+# RAL и NCS, показывает таблицу-ТЗ, умеет копировать её в буфер (для вставки
+# в Google Таблицы) и перекрашивать однотонные материалы в точные цвета.
+# У текстурных материалов цветом считается усреднённый цвет текстуры
+# (его отдаёт сам SketchUp через Material#color); перекраска текстурных
+# запрещена — она затонировала бы текстуру.
 
 require 'json'
 require_relative 'palette'
@@ -37,28 +40,31 @@ module RALNCS
       @dialog.show
     end
 
-    # Собирает однотонные материалы и подбирает ближайшие RAL/NCS.
+    # Собирает все материалы модели и подбирает ближайшие RAL/NCS.
     def scan
       model = Sketchup.active_model
       rows = []
-      skipped = 0
       model.materials.each do |m|
-        if m.texture
-          skipped += 1
-          next
-        end
         c = m.color
+        next unless c
+
         ral = Palette.nearest_ral(c.red, c.green, c.blue)
         ncs = Palette.nearest_ncs(c.red, c.green, c.blue)
         rows << {
           name: m.name,
           display_name: m.display_name,
           hex: ColorMath.rgb_to_hex(c.red, c.green, c.blue),
+          textured: !m.texture.nil?,
           ral: match_payload(ral),
           ncs: match_payload(ncs)
         }
       end
-      { rows: rows.sort_by { |r| r[:display_name].downcase }, skipped: skipped }
+      textured = rows.count { |r| r[:textured] }
+      {
+        rows: rows.sort_by { |r| r[:display_name].downcase },
+        solid: rows.size - textured,
+        textured: textured
+      }
     end
 
     def match_payload(match)
@@ -70,11 +76,11 @@ module RALNCS
       @dialog.execute_script("init(#{scan.to_json})")
     end
 
-    # params: {"palette"=>"ral"|"ncs", "rename"=>true/false, "names"=>[...]}
+    # params: {"palette"=>"ral"|"ncs", "names"=>[...]}
+    # Красит только однотонные: перекраска текстурного тонирует текстуру.
     def apply(params)
       model = Sketchup.active_model
       palette_key = params['palette'] == 'ncs' ? :ncs : :ral
-      rename = params['rename']
 
       model.start_operation("RALNCS: применить #{palette_key.to_s.upcase}", true)
       params['names'].each do |name|
@@ -84,27 +90,9 @@ module RALNCS
         c = m.color
         match = palette_key == :ncs ? Palette.nearest_ncs(c.red, c.green, c.blue) \
                                     : Palette.nearest_ral(c.red, c.green, c.blue)
-        entry = match[:entry]
-        m.color = Sketchup::Color.new(*entry[:rgb])
-        rename_material(model, m, entry) if rename
+        m.color = Sketchup::Color.new(*match[:entry][:rgb])
       end
       model.commit_operation
-    end
-
-    def rename_material(model, material, entry)
-      desired = [entry[:code], entry[:name]].compact.join(' ')
-      return if material.name == desired
-
-      # Имена материалов уникальны: при конфликте добавляем суффикс.
-      candidate = desired
-      i = 2
-      while (other = model.materials[candidate]) && other != material
-        candidate = "#{desired} (#{i})"
-        i += 1
-      end
-      material.name = candidate
-    rescue ArgumentError
-      nil # не удалось переименовать — цвет уже применён, этого достаточно
     end
   end
 end

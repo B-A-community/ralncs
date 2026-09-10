@@ -67,19 +67,23 @@
   }
 
   var samples = [
-    ['Фасад основной', '#D8CBB5'],
-    ['Акцент красный', '#C1121F'],
-    ['Цоколь тёмный', '#4A4A44'],
-    ['Рамы окон', '#FFFFFF'],
-    ['Кровля', '#8D2E24'],
-    ['Зелёный от души', '#3FA34D'],
-    ['Кислотный (вне палитр)', '#00FF88']
+    ['Фасад основной', '#D8CBB5', false],
+    ['Акцент красный', '#C1121F', false],
+    ['Цоколь тёмный', '#4A4A44', false],
+    ['Рамы окон', '#FFFFFF', false],
+    ['Кровля', '#8D2E24', false],
+    ['Зелёный от души', '#3FA34D', false],
+    ['Кислотный (вне палитр)', '#00FF88', false],
+    ['Кирпич лицевой (текстура)', '#C99A8E', true],
+    ['Доска фасадная (текстура)', '#8A6B4F', true]
   ];
   var rows = samples.map(function (s) {
     var rgb = hexToRgb(s[1]);
     var lab = rgbToLab(rgb[0], rgb[1], rgb[2]);
-    return { name: s[0], display_name: s[0], hex: s[1], ral: nearest(RAL, lab), ncs: nearest(NCS, lab) };
+    return { name: s[0], display_name: s[0], hex: s[1], textured: s[2],
+             ral: nearest(RAL, lab), ncs: nearest(NCS, lab) };
   });
   window.TEST_ROWS = rows;
-  init({ rows: rows, skipped: 3 });
+  var texCount = rows.filter(function (r) { return r.textured; }).length;
+  init({ rows: rows, solid: rows.length - texCount, textured: texCount });
 })();
