@@ -49,22 +49,28 @@ module RALNCS
     end
 
     # Собирает все материалы модели и подбирает ближайшие RAL/NCS.
+    # Подбор — 2166 расчётов ΔE на цвет, а в реальных моделях сотни материалов
+    # с одинаковым цветом, поэтому результат кэшируется по hex.
     def scan
       model = Sketchup.active_model
       rows = []
+      cache = {}
       model.materials.each do |m|
         c = m.color
         next unless c
 
-        ral = Palette.nearest_ral(c.red, c.green, c.blue)
-        ncs = Palette.nearest_ncs(c.red, c.green, c.blue)
+        hex = ColorMath.rgb_to_hex(c.red, c.green, c.blue)
+        matches = cache[hex] ||= {
+          ral: match_payload(Palette.nearest_ral(c.red, c.green, c.blue)),
+          ncs: match_payload(Palette.nearest_ncs(c.red, c.green, c.blue))
+        }
         rows << {
           name: m.name,
           display_name: m.display_name,
-          hex: ColorMath.rgb_to_hex(c.red, c.green, c.blue),
+          hex: hex,
           textured: !m.texture.nil?,
-          ral: match_payload(ral),
-          ncs: match_payload(ncs)
+          ral: matches[:ral],
+          ncs: matches[:ncs]
         }
       end
       textured = rows.count { |r| r[:textured] }

@@ -91,7 +91,7 @@
     <button id="btnRescan">Обновить</button>
     <div id="colpanel"></div>
   </header>
-  <div id="status"></div>
+  <div id="status">Считаю ближайшие RAL и NCS для материалов модели…</div>
   <div id="wrap">
     <table>
       <thead>
@@ -440,7 +440,10 @@
   document.getElementById('btnCopy').addEventListener('click', copyTz);
   document.getElementById('btnApplyRal').addEventListener('click', function () { apply('ral'); });
   document.getElementById('btnApplyNcs').addEventListener('click', function () { apply('ncs'); });
-  document.getElementById('btnRescan').addEventListener('click', function () { sketchup.rescan(); });
+  document.getElementById('btnRescan').addEventListener('click', function () {
+    document.getElementById('status').textContent = 'Считаю ближайшие RAL и NCS для материалов модели…';
+    sketchup.rescan();
+  });
   document.getElementById('checkAll').addEventListener('change', function (e) {
     document.querySelectorAll('.rowcheck').forEach(function (cb) { cb.checked = e.target.checked; });
   });
