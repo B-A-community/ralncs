@@ -85,5 +85,7 @@
   });
   window.TEST_ROWS = rows;
   var texCount = rows.filter(function (r) { return r.textured; }).length;
-  init({ rows: rows, solid: rows.length - texCount, textured: texCount });
+  var savedCols = null;
+  try { savedCols = localStorage.getItem('ralncs_cols'); } catch (e) {}
+  init({ rows: rows, solid: rows.length - texCount, textured: texCount, columns: savedCols });
 })();

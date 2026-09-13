@@ -12,7 +12,7 @@
   }
   header {
     padding: 10px 14px; background: #fff; border-bottom: 1px solid #ddd;
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative;
   }
   header .spacer { flex: 1; }
   button {
@@ -22,32 +22,57 @@
   button:hover { background: #f0f0ef; }
   button.primary { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
   button.primary:hover { background: #245a94; }
+  button.on { background: #ececea; }
   label.opt { display: flex; align-items: center; gap: 5px; user-select: none; }
   #status { padding: 6px 14px; color: #666; }
   #wrap { flex: 1; overflow: auto; padding: 0 14px 14px; }
   table { border-collapse: collapse; width: 100%; background: #fff; }
   th, td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
-  th { position: sticky; top: 0; background: #fafaf9; border-bottom: 1px solid #ddd; z-index: 1; }
+  th { position: sticky; background: #fafaf9; z-index: 1; }
+  thead tr.grp th {
+    top: 0; height: 24px; padding: 0 8px; font-size: 11px; font-weight: 600;
+    color: #888; text-transform: uppercase; letter-spacing: .03em;
+    border-bottom: 1px solid #eee;
+  }
+  thead tr.grp th.g-ral, thead tr.grp th.g-ncs { border-left: 1px solid #e4e4e2; }
+  thead tr.col th { top: 24px; border-bottom: 1px solid #ddd; }
+  td.b-ral, td.b-ncs, thead tr.col th.b-ral, thead tr.col th.b-ncs { border-left: 1px solid #f0f0ee; }
   td.matname { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
   .sw {
     display: inline-block; width: 22px; height: 22px; border-radius: 4px;
-    border: 1px solid rgba(0,0,0,.2); vertical-align: middle; margin-right: 7px;
+    border: 1px solid rgba(0,0,0,.2); vertical-align: middle;
   }
   .code { font-weight: 600; }
   .hex { color: #888; font-size: 11px; }
-  .tex {
-    display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px;
-    background: #ececea; color: #777; border: 1px solid #ddd; margin-left: 6px;
-  }
-  .de { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; color: #fff; }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; color: #fff; }
   .de0 { background: #2f855a; }  /* < 1: отлично */
   .de1 { background: #68a63e; }  /* < 2: хорошо */
   .de2 { background: #dd8a20; }  /* < 5: заметно */
   .de3 { background: #c53030; }  /* >= 5: вне палитры */
+  .tex { background: #ececea; color: #777; border: 1px solid #ddd; }
+  .solid { color: #888; }
+
+  /* Настройка столбцов */
+  #colpanel {
+    position: absolute; top: 100%; right: 14px; z-index: 5;
+    background: #fff; border: 1px solid #ccc; border-radius: 8px;
+    padding: 10px 12px; min-width: 260px; display: none;
+  }
+  #colpanel.open { display: block; }
+  #colpanel .g { margin-bottom: 8px; }
+  #colpanel .g-head { display: flex; align-items: center; gap: 6px; font-weight: 600; padding: 3px 0; }
+  #colpanel .c { display: flex; align-items: center; gap: 6px; padding: 2px 0 2px 22px; }
+  #colpanel .c.off, #colpanel .g.off .c { color: #999; }
+  #colpanel .mv { margin-left: auto; display: flex; gap: 2px; }
+  #colpanel .mv button { padding: 0 6px; line-height: 18px; font-size: 11px; border-radius: 4px; }
+  #colpanel .mv button:disabled { opacity: .3; cursor: default; }
+  #colpanel .foot { display: flex; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 1px solid #eee; }
+  #colpanel .foot .hint { color: #888; font-size: 11px; flex: 1; }
+
   #toast {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     background: #1c1c1c; color: #fff; padding: 8px 16px; border-radius: 8px;
-    opacity: 0; transition: opacity .25s; pointer-events: none;
+    opacity: 0; transition: opacity .25s; pointer-events: none; text-align: center;
   }
   #toast.on { opacity: .92; }
 </style>
@@ -58,21 +83,20 @@
     <button id="btnCopy" class="primary">Скопировать ТЗ (в Google Таблицы)</button>
     <button id="btnApplyRal">Применить RAL</button>
     <button id="btnApplyNcs">Применить NCS</button>
+    <label class="opt" title="Перекрашивать и текстурные материалы: SketchUp затонирует текстуру в цвет палитры">
+      <input type="checkbox" id="optTint"> тонировать текстурные
+    </label>
     <span class="spacer"></span>
+    <button id="btnCols">Столбцы ▾</button>
     <button id="btnRescan">Обновить</button>
+    <div id="colpanel"></div>
   </header>
   <div id="status"></div>
   <div id="wrap">
     <table>
       <thead>
-        <tr>
-          <th></th>
-          <th>Материал</th>
-          <th>Ближайший RAL</th>
-          <th>ΔE</th>
-          <th>Ближайший NCS</th>
-          <th>ΔE</th>
-        </tr>
+        <tr class="grp" id="hgrp"></tr>
+        <tr class="col" id="hcol"></tr>
       </thead>
       <tbody id="rows"></tbody>
     </table>
@@ -80,57 +104,234 @@
   <div id="toast"></div>
 
 <script>
-  var DATA = { rows: [], skipped: 0 };
+  var DATA = { rows: [], solid: 0, textured: 0 };
 
-  function deClass(de) {
-    if (de < 1) return 'de0';
-    if (de < 2) return 'de1';
-    if (de < 5) return 'de2';
-    return 'de3';
+  // ---------- Столбцы ----------
+  // Экранная таблица и буфер обмена строятся из одного списка: что видно —
+  // то и копируется, в том же порядке.
+  var GROUPS = [
+    { key: 'mat', title: 'Материал', cols: [
+      { key: 'name',      title: 'Материал',      exp: 'Материал',          on: true },
+      { key: 'type',      title: 'Тип',           exp: 'Тип',               on: true },
+      { key: 'color',     title: 'Цвет',          exp: 'Цвет',              on: true },
+      { key: 'hex',       title: 'HEX',           exp: 'HEX в модели',      on: true },
+      { key: 'rgb',       title: 'RGB',           exp: 'RGB в модели',      on: false }
+    ]},
+    { key: 'ral', title: 'RAL', cols: [
+      { key: 'ral_color', title: 'Цвет',          exp: 'Цвет RAL',          on: true },
+      { key: 'ral_code',  title: 'RAL',           exp: 'RAL',               on: true },
+      { key: 'ral_name',  title: 'Название',      exp: 'Название RAL',      on: true },
+      { key: 'ral_hex',   title: 'HEX',           exp: 'RAL HEX',           on: false },
+      { key: 'ral_rgb',   title: 'RGB',           exp: 'RAL RGB',           on: false },
+      { key: 'ral_de',    title: 'ΔE',            exp: 'ΔE RAL',            on: true }
+    ]},
+    { key: 'ncs', title: 'NCS', cols: [
+      { key: 'ncs_color', title: 'Цвет',          exp: 'Цвет NCS',          on: true },
+      { key: 'ncs_code',  title: 'NCS',           exp: 'NCS',               on: true },
+      { key: 'ncs_hex',   title: 'HEX',           exp: 'NCS HEX',           on: false },
+      { key: 'ncs_rgb',   title: 'RGB',           exp: 'NCS RGB',           on: false },
+      { key: 'ncs_de',    title: 'ΔE',            exp: 'ΔE NCS',            on: true }
+    ]}
+  ];
+  var COLDEF = {};
+  GROUPS.forEach(function (g) { g.cols.forEach(function (c) { COLDEF[c.key] = c; }); });
+
+  // CFG: [{key, on, cols:[{key, on}]}] — порядок групп и столбцов внутри
+  var CFG = defaultCfg();
+
+  function defaultCfg() {
+    return GROUPS.map(function (g) {
+      return { key: g.key, on: true, cols: g.cols.map(function (c) { return { key: c.key, on: c.on }; }) };
+    });
   }
-  function deTitle(de) {
-    if (de < 1) return 'отличное совпадение';
-    if (de < 2) return 'хорошее совпадение';
-    if (de < 5) return 'заметная разница';
-    return 'цвет вне палитры';
+
+  // "mat:name,type,-rgb|-ral:ral_color,...|ncs:..." — без кавычек, чтобы
+  // безопасно жить в реестре SketchUp
+  function serializeCfg() {
+    return CFG.map(function (g) {
+      return (g.on ? '' : '-') + g.key + ':' + g.cols.map(function (c) { return (c.on ? '' : '-') + c.key; }).join(',');
+    }).join('|');
   }
+
+  function parseCfg(spec) {
+    if (!spec || typeof spec !== 'string') return null;
+    var byKey = {};
+    GROUPS.forEach(function (g) { byKey[g.key] = g; });
+    var seenG = {}, out = [];
+    spec.split('|').forEach(function (part) {
+      var m = part.match(/^(-?)([a-z]+):(.*)$/);
+      if (!m || !byKey[m[2]] || seenG[m[2]]) return;
+      seenG[m[2]] = true;
+      var g = byKey[m[2]], seenC = {}, cols = [];
+      m[3].split(',').forEach(function (tok) {
+        var cm = tok.match(/^(-?)([a-z_]+)$/);
+        if (!cm || !COLDEF[cm[2]] || seenC[cm[2]]) return;
+        if (!g.cols.some(function (c) { return c.key === cm[2]; })) return;
+        seenC[cm[2]] = true;
+        cols.push({ key: cm[2], on: cm[1] !== '-' });
+      });
+      g.cols.forEach(function (c) { if (!seenC[c.key]) cols.push({ key: c.key, on: c.on }); });
+      out.push({ key: g.key, on: m[1] !== '-', cols: cols });
+    });
+    GROUPS.forEach(function (g) {
+      if (!seenG[g.key]) out.push({ key: g.key, on: true, cols: g.cols.map(function (c) { return { key: c.key, on: c.on }; }) });
+    });
+    return out;
+  }
+
+  function saveCfg() {
+    try { sketchup.save_columns(serializeCfg()); } catch (e) {}
+  }
+
+  // Видимые столбцы в порядке показа: [{key, group}]
+  function visibleCols() {
+    var out = [];
+    CFG.forEach(function (g) {
+      if (!g.on) return;
+      g.cols.forEach(function (c) { if (c.on) out.push({ key: c.key, group: g.key }); });
+    });
+    return out;
+  }
+
+  // ---------- Значения ячеек ----------
   function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                     .replace(/"/g, '&quot;');
   }
+  function deClass(de) { return de < 1 ? 'de0' : de < 2 ? 'de1' : de < 5 ? 'de2' : 'de3'; }
+  function deTitle(de) {
+    return de < 1 ? 'отличное совпадение' : de < 2 ? 'хорошее совпадение'
+         : de < 5 ? 'заметная разница' : 'цвет вне палитры';
+  }
+  // "#F0D3D0" -> "240-211-208" — формат RGB, принятый в ТЗ на фасады
+  function hexToRgbStr(hex) {
+    var h = hex.replace('#', '');
+    return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16),
+            parseInt(h.substr(4, 2), 16)].join('-');
+  }
+
+  // Значение для буфера: {v, bg}
+  function cellValue(r, key) {
+    switch (key) {
+      case 'name':      return { v: r.display_name };
+      case 'type':      return { v: r.textured ? 'текстура' : 'заливка' };
+      case 'color':     return { v: '', bg: r.hex };
+      case 'hex':       return { v: r.hex };
+      case 'rgb':       return { v: hexToRgbStr(r.hex) };
+      case 'ral_color': return { v: '', bg: r.ral.hex };
+      case 'ral_code':  return { v: r.ral.code };
+      case 'ral_name':  return { v: r.ral.name || '' };
+      case 'ral_hex':   return { v: r.ral.hex };
+      case 'ral_rgb':   return { v: hexToRgbStr(r.ral.hex) };
+      case 'ral_de':    return { v: r.ral.de.toFixed(1) };
+      case 'ncs_color': return { v: '', bg: r.ncs.hex };
+      case 'ncs_code':  return { v: r.ncs.code };
+      case 'ncs_hex':   return { v: r.ncs.hex };
+      case 'ncs_rgb':   return { v: hexToRgbStr(r.ncs.hex) };
+      case 'ncs_de':    return { v: r.ncs.de.toFixed(1) };
+    }
+    return { v: '' };
+  }
+
+  // HTML для экрана
+  function cellHtml(r, key) {
+    switch (key) {
+      case 'name':
+        return '<td class="matname" title="' + esc(r.display_name) +
+               (r.textured ? ' — цвет усреднён по текстуре' : '') + '">' + esc(r.display_name) + '</td>';
+      case 'type':
+        return '<td>' + (r.textured ? '<span class="pill tex">текстура</span>' : '<span class="solid">заливка</span>') + '</td>';
+      case 'color':     return '<td><span class="sw" style="background:' + r.hex + '"></span></td>';
+      case 'ral_color': return '<td class="b-ral"><span class="sw" style="background:' + r.ral.hex + '"></span></td>';
+      case 'ncs_color': return '<td class="b-ncs"><span class="sw" style="background:' + r.ncs.hex + '"></span></td>';
+      case 'hex': case 'ral_hex': case 'ncs_hex':
+        return '<td><span class="hex">' + cellValue(r, key).v + '</span></td>';
+      case 'ral_code':  return '<td class="code">' + esc(r.ral.code) + '</td>';
+      case 'ncs_code':  return '<td class="code">' + esc(r.ncs.code) + '</td>';
+      case 'ral_de':
+        return '<td><span class="pill ' + deClass(r.ral.de) + '" title="' + deTitle(r.ral.de) + '">' + r.ral.de.toFixed(1) + '</span></td>';
+      case 'ncs_de':
+        return '<td><span class="pill ' + deClass(r.ncs.de) + '" title="' + deTitle(r.ncs.de) + '">' + r.ncs.de.toFixed(1) + '</span></td>';
+      default:
+        return '<td>' + esc(cellValue(r, key).v) + '</td>';
+    }
+  }
+
+  // ---------- Рендер таблицы ----------
+  function renderTable() {
+    var cols = visibleCols();
+    var gtitle = {};
+    GROUPS.forEach(function (g) { gtitle[g.key] = g.title; });
+
+    // Шапка групп: одна ячейка на непрерывный блок одной группы
+    var ghtml = '<th></th>', i = 0;
+    while (i < cols.length) {
+      var g = cols[i].group, span = 0;
+      while (i + span < cols.length && cols[i + span].group === g) span++;
+      ghtml += '<th class="g-' + g + '" colspan="' + span + '">' + esc(gtitle[g]) + '</th>';
+      i += span;
+    }
+    document.getElementById('hgrp').innerHTML = ghtml;
+
+    document.getElementById('hcol').innerHTML = '<th></th>' + cols.map(function (c, idx) {
+      var first = idx === 0 || cols[idx - 1].group !== c.group;
+      return '<th' + (first && c.group !== 'mat' ? ' class="b-' + c.group + '"' : '') + '>' + esc(COLDEF[c.key].title) + '</th>';
+    }).join('');
+
+    document.getElementById('rows').innerHTML = DATA.rows.map(function (r, ri) {
+      return '<tr><td><input type="checkbox" class="rowcheck" data-i="' + ri + '" checked></td>' +
+             cols.map(function (c) { return cellHtml(r, c.key); }).join('') + '</tr>';
+    }).join('');
+  }
+
+  function renderColPanel() {
+    var p = document.getElementById('colpanel');
+    var gtitle = {};
+    GROUPS.forEach(function (g) { gtitle[g.key] = g.title; });
+    p.innerHTML = CFG.map(function (g, gi) {
+      var head = '<div class="g-head">' +
+        '<input type="checkbox" data-g="' + gi + '"' + (g.on ? ' checked' : '') + '> ' + esc(gtitle[g.key]) +
+        '<span class="mv"><button data-mg="' + gi + '" data-d="-1"' + (gi === 0 ? ' disabled' : '') + ' title="Выше">▲</button>' +
+        '<button data-mg="' + gi + '" data-d="1"' + (gi === CFG.length - 1 ? ' disabled' : '') + ' title="Ниже">▼</button></span></div>';
+      var cols = g.cols.map(function (c, ci) {
+        return '<div class="c' + (c.on ? '' : ' off') + '">' +
+          '<input type="checkbox" data-g="' + gi + '" data-c="' + ci + '"' + (c.on ? ' checked' : '') + '> ' + esc(COLDEF[c.key].exp) +
+          '<span class="mv"><button data-mc="' + gi + ':' + ci + '" data-d="-1"' + (ci === 0 ? ' disabled' : '') + ' title="Левее">▲</button>' +
+          '<button data-mc="' + gi + ':' + ci + '" data-d="1"' + (ci === g.cols.length - 1 ? ' disabled' : '') + ' title="Правее">▼</button></span></div>';
+      }).join('');
+      return '<div class="g' + (g.on ? '' : ' off') + '">' + head + cols + '</div>';
+    }).join('') +
+    '<div class="foot"><span class="hint">Порядок сверху вниз = слева направо. Копируются только видимые.</span>' +
+    '<button id="colsReset">Сбросить</button></div>';
+  }
+
+  function cfgChanged() {
+    renderColPanel();
+    renderTable();
+    saveCfg();
+    updateStatus();
+  }
+
+  function updateStatus() {
+    var status = 'Материалов: ' + DATA.rows.length +
+                 ' (однотонных ' + DATA.solid + ', текстурных ' + DATA.textured + ')';
+    if (DATA.textured > 0) status += ' • у текстурных цвет усреднён по текстуре';
+    status += ' • столбцов: ' + visibleCols().length + ' из ' + Object.keys(COLDEF).length;
+    status += ' • ΔE — визуальная разница с экранным цветом (меньше — точнее)';
+    document.getElementById('status').textContent = status;
+  }
 
   function init(data) {
     DATA = data;
-    var tbody = document.getElementById('rows');
-    tbody.innerHTML = data.rows.map(function (r, i) {
-      return '<tr>' +
-        '<td><input type="checkbox" class="rowcheck" data-i="' + i + '" checked></td>' +
-        '<td class="matname" title="' + esc(r.display_name) +
-          (r.textured ? ' — цвет усреднён по текстуре' : '') + '">' +
-          '<span class="sw" style="background:' + r.hex + '"></span>' +
-          esc(r.display_name) + ' <span class="hex">' + r.hex + '</span>' +
-          (r.textured ? '<span class="tex">текстура</span>' : '') + '</td>' +
-        '<td><span class="sw" style="background:' + r.ral.hex + '"></span>' +
-          '<span class="code">' + esc(r.ral.code) + '</span> ' + esc(r.ral.name || '') +
-          ' <span class="hex">' + r.ral.hex + '</span></td>' +
-        '<td><span class="de ' + deClass(r.ral.de) + '" title="' + deTitle(r.ral.de) + '">' +
-          r.ral.de.toFixed(1) + '</span></td>' +
-        '<td><span class="sw" style="background:' + r.ncs.hex + '"></span>' +
-          '<span class="code">' + esc(r.ncs.code) + '</span>' +
-          ' <span class="hex">' + r.ncs.hex + '</span></td>' +
-        '<td><span class="de ' + deClass(r.ncs.de) + '" title="' + deTitle(r.ncs.de) + '">' +
-          r.ncs.de.toFixed(1) + '</span></td>' +
-        '</tr>';
-    }).join('');
-
-    var status = 'Материалов: ' + data.rows.length +
-                 ' (однотонных ' + data.solid + ', текстурных ' + data.textured + ')';
-    if (data.textured > 0) status += ' • у текстурных цвет усреднён по текстуре';
-    status += ' • ΔE — визуальная разница с экранным цветом (меньше — точнее)';
-    document.getElementById('status').textContent = status;
+    var parsed = parseCfg(data.columns);
+    if (parsed) CFG = parsed;
+    renderColPanel();
+    renderTable();
+    updateStatus();
     document.getElementById('checkAll').checked = true;
   }
 
+  // ---------- Действия ----------
   function checkedRows() {
     var out = [];
     document.querySelectorAll('.rowcheck:checked').forEach(function (cb) {
@@ -143,59 +344,27 @@
     var t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('on');
-    setTimeout(function () { t.classList.remove('on'); }, 2200);
+    setTimeout(function () { t.classList.remove('on'); }, 2400);
   }
 
-  // "#F0D3D0" -> "240-211-208" — формат RGB, принятый в ТЗ на фасады.
-  function hexToRgbStr(hex) {
-    var h = hex.replace('#', '');
-    return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16),
-            parseInt(h.substr(4, 2), 16)].join('-');
-  }
-
-  // Колонки ТЗ. Пустые колонки «Цвет» в TSV держат сетку; в HTML-формате
-  // буфера те же ячейки уходят с background-color — Google Таблицы и Excel
-  // сохраняют заливку при вставке.
-  function tzCells(r) {
-    return [
-      { v: r.display_name },
-      { v: r.textured ? 'текстура' : 'заливка' },
-      { v: '', bg: r.hex },
-      { v: r.hex },
-      { v: hexToRgbStr(r.hex) },
-      { v: r.ral.code },
-      { v: r.ral.name || '' },
-      { v: '', bg: r.ral.hex },
-      { v: r.ral.hex },
-      { v: hexToRgbStr(r.ral.hex) },
-      { v: r.ral.de.toFixed(1) },
-      { v: r.ncs.code },
-      { v: '', bg: r.ncs.hex },
-      { v: r.ncs.hex },
-      { v: hexToRgbStr(r.ncs.hex) },
-      { v: r.ncs.de.toFixed(1) }
-    ];
-  }
-  var TZ_HEADER = ['Материал', 'Тип', 'Цвет', 'HEX в модели', 'RGB в модели',
-                   'RAL', 'Название RAL', 'Цвет RAL', 'RAL HEX', 'RAL RGB', 'ΔE RAL',
-                   'NCS', 'Цвет NCS', 'NCS HEX', 'NCS RGB', 'ΔE NCS'];
-
-  function buildTsv(rows) {
-    var lines = [TZ_HEADER.join('\t')];
+  // Пустые ячейки «Цвет» в TSV держат сетку; в HTML-формате буфера те же
+  // ячейки уходят с background-color — Google Таблицы и Excel сохраняют заливку.
+  function buildTsv(rows, cols) {
+    var lines = [cols.map(function (c) { return COLDEF[c.key].exp; }).join('\t')];
     rows.forEach(function (r) {
-      lines.push(tzCells(r).map(function (c) { return c.v; }).join('\t'));
+      lines.push(cols.map(function (c) { return cellValue(r, c.key).v; }).join('\t'));
     });
     return lines.join('\n');
   }
 
-  function buildHtmlTable(rows) {
-    var head = '<tr>' + TZ_HEADER.map(function (h) {
-      return '<td style="font-weight:bold">' + esc(h) + '</td>';
+  function buildHtmlTable(rows, cols) {
+    var head = '<tr>' + cols.map(function (c) {
+      return '<td style="font-weight:bold">' + esc(COLDEF[c.key].exp) + '</td>';
     }).join('') + '</tr>';
     var body = rows.map(function (r) {
-      return '<tr>' + tzCells(r).map(function (c) {
-        var style = c.bg ? ' style="background-color:' + c.bg + '"' : '';
-        return '<td' + style + '>' + esc(c.v) + '</td>';
+      return '<tr>' + cols.map(function (c) {
+        var v = cellValue(r, c.key);
+        return '<td' + (v.bg ? ' style="background-color:' + v.bg + '"' : '') + '>' + esc(v.v) + '</td>';
       }).join('') + '</tr>';
     }).join('');
     return '<table>' + head + body + '</table>';
@@ -230,41 +399,90 @@
     }
   }
 
-  function copyTsv() {
+  function copyTz() {
     var rows = checkedRows();
+    var cols = visibleCols();
     if (!rows.length) { toast('Не выбрано ни одного материала'); return; }
-    copyBoth(buildTsv(rows), buildHtmlTable(rows), function () {
-      toast('Скопировано: ' + rows.length + ' строк. Вставьте в Google Таблицу (Ctrl+V) — колонки «Цвет» придут с заливкой.');
+    if (!cols.length)  { toast('Все столбцы скрыты — включите нужные в «Столбцы»'); return; }
+    copyBoth(buildTsv(rows, cols), buildHtmlTable(rows, cols), function () {
+      toast('Скопировано: ' + rows.length + ' строк × ' + cols.length + ' столбцов. Вставьте в Google Таблицу (Ctrl+V).');
     });
   }
 
   function apply(palette) {
     var rows = checkedRows();
     if (!rows.length) { toast('Не выбрано ни одного материала'); return; }
+    var tint = document.getElementById('optTint').checked;
     var solid = rows.filter(function (r) { return !r.textured; });
-    if (!solid.length) {
-      toast('Среди выбранных только текстурные материалы — их перекраска затонировала бы текстуру');
+    var textured = rows.length - solid.length;
+    var target = tint ? rows : solid;
+    if (!target.length) {
+      toast('Среди выбранных только текстурные материалы — включите «тонировать текстурные», чтобы перекрасить их');
       return;
     }
     var label = palette.toUpperCase();
-    var msg = 'Перекрасить ' + solid.length + ' однотонных материал(ов) в точные цвета ' + label + '?';
-    if (rows.length > solid.length) {
-      msg += '\nТекстурные (' + (rows.length - solid.length) + ' шт.) не трогаем — перекраска тонирует текстуру.';
+    var msg = 'Перекрасить ' + target.length + ' материал(ов) в точные цвета ' + label + '?';
+    if (textured > 0) {
+      msg += tint
+        ? '\nИз них текстурных: ' + textured + ' — их текстура будет затонирована в цвет ' + label + '.'
+        : '\nТекстурные (' + textured + ' шт.) не трогаем — включите «тонировать текстурные», если нужно.';
     }
     msg += '\nДействие можно отменить (Ctrl+Z).';
     if (!confirm(msg)) return;
     sketchup.apply(JSON.stringify({
       palette: palette,
-      names: solid.map(function (r) { return r.name; })
+      tint: tint,
+      names: target.map(function (r) { return r.name; })
     }));
   }
 
-  document.getElementById('btnCopy').addEventListener('click', copyTsv);
+  // ---------- События ----------
+  document.getElementById('btnCopy').addEventListener('click', copyTz);
   document.getElementById('btnApplyRal').addEventListener('click', function () { apply('ral'); });
   document.getElementById('btnApplyNcs').addEventListener('click', function () { apply('ncs'); });
   document.getElementById('btnRescan').addEventListener('click', function () { sketchup.rescan(); });
   document.getElementById('checkAll').addEventListener('change', function (e) {
     document.querySelectorAll('.rowcheck').forEach(function (cb) { cb.checked = e.target.checked; });
+  });
+
+  var colBtn = document.getElementById('btnCols');
+  var colPanel = document.getElementById('colpanel');
+  colBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    colPanel.classList.toggle('open');
+    colBtn.classList.toggle('on', colPanel.classList.contains('open'));
+  });
+  document.addEventListener('click', function (e) {
+    if (colPanel.classList.contains('open') && !colPanel.contains(e.target)) {
+      colPanel.classList.remove('open');
+      colBtn.classList.remove('on');
+    }
+  });
+  colPanel.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.tagName !== 'INPUT') return;
+    var g = CFG[parseInt(t.dataset.g, 10)];
+    if (t.dataset.c !== undefined) g.cols[parseInt(t.dataset.c, 10)].on = t.checked;
+    else g.on = t.checked;
+    cfgChanged();
+  });
+  colPanel.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.id === 'colsReset') { CFG = defaultCfg(); cfgChanged(); return; }
+    var d = parseInt(b.dataset.d, 10);
+    if (b.dataset.mg !== undefined) {
+      var gi = parseInt(b.dataset.mg, 10), gj = gi + d;
+      if (gj < 0 || gj >= CFG.length) return;
+      var tmp = CFG[gi]; CFG[gi] = CFG[gj]; CFG[gj] = tmp;
+      cfgChanged();
+    } else if (b.dataset.mc !== undefined) {
+      var p = b.dataset.mc.split(':'), grp = CFG[parseInt(p[0], 10)];
+      var ci = parseInt(p[1], 10), cj = ci + d;
+      if (cj < 0 || cj >= grp.cols.length) return;
+      var tc = grp.cols[ci]; grp.cols[ci] = grp.cols[cj]; grp.cols[cj] = tc;
+      cfgChanged();
+    }
   });
 
   window.addEventListener('DOMContentLoaded', function () { sketchup.ready(); });

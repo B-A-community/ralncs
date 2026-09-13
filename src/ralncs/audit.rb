@@ -1,9 +1,9 @@
 # Анализ материалов модели: для каждого материала подбирает ближайшие
 # RAL и NCS, показывает таблицу-ТЗ, умеет копировать её в буфер (для вставки
-# в Google Таблицы) и перекрашивать однотонные материалы в точные цвета.
+# в Google Таблицы) и перекрашивать материалы в точные цвета.
 # У текстурных материалов цветом считается усреднённый цвет текстуры
-# (его отдаёт сам SketchUp через Material#color); перекраска текстурных
-# запрещена — она затонировала бы текстуру.
+# (его отдаёт сам SketchUp через Material#color). Перекраска текстурного
+# тонирует текстуру — поэтому она включается отдельной опцией.
 
 require 'json'
 require_relative 'palette'
@@ -11,6 +11,9 @@ require_relative 'color_math'
 
 module RALNCS
   module Audit
+    PREFS_SECTION = 'RALNCS'
+    PREFS_COLUMNS = 'audit_columns'
+
     module_function
 
     def show
@@ -35,6 +38,11 @@ module RALNCS
       @dialog.add_action_callback('apply') do |_ctx, json|
         apply(JSON.parse(json))
         push_data
+      end
+      # Настройка столбцов хранится в реестре SketchUp; формат — компактная
+      # строка без кавычек (write_default плохо переживает JSON).
+      @dialog.add_action_callback('save_columns') do |_ctx, spec|
+        Sketchup.write_default(PREFS_SECTION, PREFS_COLUMNS, spec.to_s)
       end
 
       @dialog.show
@@ -73,19 +81,23 @@ module RALNCS
     end
 
     def push_data
-      @dialog.execute_script("init(#{scan.to_json})")
+      payload = scan
+      payload[:columns] = Sketchup.read_default(PREFS_SECTION, PREFS_COLUMNS, nil)
+      @dialog.execute_script("init(#{payload.to_json})")
     end
 
-    # params: {"palette"=>"ral"|"ncs", "names"=>[...]}
-    # Красит только однотонные: перекраска текстурного тонирует текстуру.
+    # params: {"palette"=>"ral"|"ncs", "names"=>[...], "tint"=>true/false}
+    # Без tint текстурные пропускаются; с tint текстура тонируется в цвет палитры.
     def apply(params)
       model = Sketchup.active_model
       palette_key = params['palette'] == 'ncs' ? :ncs : :ral
+      tint = params['tint'] == true
 
       model.start_operation("RALNCS: применить #{palette_key.to_s.upcase}", true)
       params['names'].each do |name|
         m = model.materials[name]
-        next unless m && m.texture.nil?
+        next unless m
+        next if m.texture && !tint
 
         c = m.color
         match = palette_key == :ncs ? Palette.nearest_ncs(c.red, c.green, c.blue) \
