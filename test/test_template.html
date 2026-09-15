@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Название плагина — окно</title>
+<!-- ba.css и ba.js положить рядом с этим html (в папку html/ плагина) -->
+<link rel="stylesheet" href="../design/ba.css">
+</head>
+<body>
+  <!-- Шапка: одна акцентная кнопка слева, сервисные — справа за spacer -->
+  <header>
+    <label class="opt"><input type="checkbox" id="checkAll" checked> все</label>
+    <button id="btnCopy" class="primary">Скопировать в буфер</button>
+    <button id="btnApply">Применить</button>
+    <label class="opt" title="Опасная опция: выключена по умолчанию, объясняем что делает">
+      <input type="checkbox" id="optRisky"> рискованная опция
+    </label>
+    <span class="spacer"></span>
+    <button id="btnSettings">Настройки ▾</button>
+    <button id="btnRescan">Обновить</button>
+    <div id="settings" class="popover">
+      <div class="g">
+        <div class="g-head"><input type="checkbox" checked> Группа</div>
+        <div class="c"><input type="checkbox" checked> Параметр</div>
+      </div>
+      <div class="foot"><span class="hint">Подсказка мелким серым.</span><button>Сбросить</button></div>
+    </div>
+  </header>
+
+  <!-- Статус: счётчик + расшифровка; пока идёт расчёт — «Считаю…» -->
+  <div id="status">Считаю…</div>
+
+  <div id="wrap">
+    <table>
+      <thead>
+        <tr class="grp"><th></th><th colspan="3">Объект</th><th colspan="2">Результат</th></tr>
+        <tr class="col"><th></th><th>Имя</th><th>Тип</th><th>Цвет</th><th class="b">Значение</th><th>Оценка</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>Честный дисклеймер: что приближённо и с чем сверять.</footer>
+  <div id="toast"></div>
+
+<script>window.sketchup={ready:function(){},rescan:function(){},apply:function(j){console.log('apply',j)}};</script>
+<script src="../design/ba.js"></script>
+<script>
+  var DATA = { rows: [] };
+
+  // Данные приходят из Ruby после колбэка ready: dialog.execute_script("init(<json>)")
+  function init(data) {
+    DATA = data;
+    document.getElementById('rows').innerHTML = data.rows.map(function (r, i) {
+      return '<tr>' +
+        '<td><input type="checkbox" class="rowcheck" data-i="' + i + '" checked></td>' +
+        '<td class="ellipsis" title="' + BA.esc(r.name) + '">' + BA.esc(r.name) + '</td>' +
+        '<td>' + (r.textured ? '<span class="pill neutral">текстура</span>' : '<span class="dim">заливка</span>') + '</td>' +
+        '<td>' + BA.swatch(r.hex) + ' <span class="muted">' + r.hex + '</span></td>' +
+        '<td class="b code">' + BA.esc(r.value) + '</td>' +
+        '<td>' + BA.scalePill(r.score, [1, 2, 5], ['отлично', 'хорошо', 'заметно', 'плохо']) + '</td>' +
+        '</tr>';
+    }).join('');
+    document.getElementById('status').textContent =
+      'Объектов: ' + data.rows.length + ' • подсказка про шкалу (меньше — точнее)';
+  }
+
+  function checkedRows() {
+    var out = [];
+    document.querySelectorAll('.rowcheck:checked').forEach(function (cb) { out.push(DATA.rows[+cb.dataset.i]); });
+    return out;
+  }
+
+  BA.checkAll('checkAll', '.rowcheck');
+  BA.popover('btnSettings', 'settings');
+
+  document.getElementById('btnCopy').addEventListener('click', function () {
+    var rows = checkedRows();
+    if (!rows.length) { BA.toast('Не выбрано ни одного объекта'); return; }
+    BA.copyTable(['Имя', 'Цвет', 'HEX', 'Значение', 'Оценка'], rows.map(function (r) {
+      return [{ v: r.name }, { v: '', bg: r.hex }, { v: r.hex }, { v: r.value }, { v: r.score.toFixed(1) }];
+    }));
+  });
+
+  document.getElementById('btnApply').addEventListener('click', function () {
+    var rows = checkedRows();
+    if (!rows.length) { BA.toast('Не выбрано ни одного объекта'); return; }
+    if (!BA.confirmUndoable(['Применить к ' + rows.length + ' объект(ам)?',
+                             document.getElementById('optRisky').checked ? 'Рискованная опция включена — что именно случится.' : null].filter(Boolean))) return;
+    sketchup.apply(JSON.stringify({ names: rows.map(function (r) { return r.name; }) }));
+  });
+
+  document.getElementById('btnRescan').addEventListener('click', function () {
+    document.getElementById('status').textContent = 'Считаю…';
+    sketchup.rescan();
+  });
+
+  window.addEventListener('DOMContentLoaded', function () { init({rows:[{name:'Фасад основной',textured:false,hex:'#D8CBB5',value:'RAL 1015',score:3.6},{name:'Кирпич лицевой',textured:true,hex:'#C99A8E',value:'NCS S 2020-Y80R',score:0.8},{name:'Кислотный',textured:false,hex:'#00FF88',value:'RAL 6038',score:18.8}]}); });
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Иконка тулбара B&A: flat, 24×24, без градиентов/текста/фильтров.
+       Палитра: данные — #C1121F #F2A900 #2F855A #2B6CB0; железо/обводки — #3B3B38; фон — #FFFFFF.
+       Обводка контура 1.6, скругления rx 0.85–2.2. Сюжет — предмет из жизни архитектора. -->
+  <rect x="3.5" y="2.5" width="17" height="19" rx="2.2" fill="#FFFFFF" stroke="#3B3B38" stroke-width="1.6"/>
+  <rect x="6.5" y="6" width="3.6" height="3.6" rx="0.9" fill="#C1121F"/>
+  <rect x="11.8" y="7" width="5.7" height="1.7" rx="0.85" fill="#8A8A85"/>
+  <rect x="6.5" y="11" width="3.6" height="3.6" rx="0.9" fill="#2B6CB0"/>
+  <rect x="11.8" y="12" width="5.7" height="1.7" rx="0.85" fill="#8A8A85"/>
+</svg>
