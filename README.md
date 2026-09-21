@@ -1,4 +1,4 @@
-# RALNCS — плагин RAL / NCS для SketchUp 2024
+# RALNCS — плагин RAL / NCS для SketchUp 2024 / 2025
 
 **Русский** · [English](README.en.md)
 
@@ -61,7 +61,7 @@
 - Сборка: `.uild.ps1` (оба языка) или `.uild.ps1 -Lang en` →
   `dist\RALNCS-<версия>-rus|eng.rbz`.
 - Для разработки: `.\dev_install.ps1` копирует `src\` (русский) в папку
-  Plugins SketchUp 2024; `tools\su_exec.ps1` выполняет Ruby в работающем
+  Plugins SketchUp 2024 (`-Version 2025` — в 2025); `tools\su_exec.ps1` выполняет Ruby в работающем
   SketchUp.
 
 ## Структура

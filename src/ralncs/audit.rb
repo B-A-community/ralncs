@@ -46,7 +46,27 @@ module RALNCS
         Sketchup.write_default(PREFS_SECTION, PREFS_COLUMNS, spec.to_s)
       end
 
+      # После Ctrl+Z / Ctrl+Y таблица пересчитывается сама, иначе она показывает
+      # уже несуществующие цвета до нажатия «Обновить».
+      @observer ||= UndoWatcher.new
+      model.add_observer(@observer)
+      @dialog.set_on_closed { model.remove_observer(@observer) }
+
       @dialog.show
+    end
+
+    def refresh_if_open
+      push_data if @dialog&.visible?
+    end
+
+    class UndoWatcher < Sketchup::ModelObserver
+      def onTransactionUndo(_model)
+        Audit.refresh_if_open
+      end
+
+      def onTransactionRedo(_model)
+        Audit.refresh_if_open
+      end
     end
 
     # Собирает все материалы модели и подбирает ближайшие RAL/NCS.
