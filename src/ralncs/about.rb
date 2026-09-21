@@ -1,5 +1,7 @@
 # Окно «О плагине»: авторы, версия, ссылка на репозиторий.
 
+require_relative 'lang'
+
 module RALNCS
   module About
     REPO_URL = 'https://github.com/B-A-community/ralncs'
@@ -9,7 +11,7 @@ module RALNCS
     def show
       @dialog&.close
       @dialog = UI::HtmlDialog.new(
-        dialog_title: 'О плагине RALNCS',
+        dialog_title: RALNCS.t(:title_about),
         preferences_key: 'ralncs_about',
         width: 420,
         height: 300,

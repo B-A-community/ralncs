@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>RALNCS 1.0 — краткая инструкция</title>
+<style>
+  @page { size: A4; margin: 16mm 18mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 11pt/1.45 "Segoe UI", system-ui, sans-serif; color: #1c1c1c; }
+  header { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 14px; }
+  header svg { width: 44px; height: 44px; flex: none; }
+  h1 { font-size: 20pt; font-weight: 700; line-height: 1.1; }
+  .sub { color: #666; font-size: 10pt; margin-top: 2px; }
+  h2 { font-size: 12.5pt; font-weight: 700; margin: 14px 0 6px; display: flex; align-items: center; gap: 8px; }
+  h2 .n { display: inline-block; width: 22px; height: 22px; border-radius: 11px; background: #2b6cb0; color: #fff; font-size: 10pt; text-align: center; line-height: 22px; }
+  p, li { margin-bottom: 4px; }
+  ol, ul { padding-left: 20px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; }
+  kbd, .btn { font: inherit; font-size: 9.5pt; padding: 1px 7px; border: 1px solid #bbb; border-radius: 5px; background: #fff; white-space: nowrap; }
+  .btn.primary { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+  .pill { display: inline-block; padding: 0 7px; border-radius: 10px; font-size: 9pt; color: #fff; }
+  .ok { background: #2f855a; } .good { background: #68a63e; } .warn { background: #dd8a20; } .bad { background: #c53030; }
+  .note { background: #f5f5f4; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-size: 10pt; }
+  .note b { color: #c53030; }
+  footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #ddd; color: #888; font-size: 9pt; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<header>
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <g transform="rotate(-54 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#C1121F"/></g>
+    <g transform="rotate(-18 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#F2A900"/></g>
+    <g transform="rotate(18 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#2F855A"/></g>
+    <g transform="rotate(54 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#2B6CB0"/></g>
+    <circle cx="12" cy="19.5" r="2.6" fill="#3B3B38"/><circle cx="12" cy="19.5" r="1.1" fill="#F5F5F4"/>
+  </svg>
+  <div>
+    <h1>RALNCS 1.0 — краткая инструкция</h1>
+    <div class="sub">Плагин SketchUp 2024: веер RAL Classic и NCS 1950, подбор ближайших RAL/NCS для материалов модели, ТЗ в один клик</div>
+  </div>
+</header>
+
+<h2><span class="n">1</span>Установка</h2>
+<p>SketchUp → <b>Window → Extension Manager → Install Extension</b> → выбрать <code>RALNCS-1.0-rus.rbz</code> → перезапустить SketchUp.
+Появится панель инструментов «RALNCS» (две кнопки) и меню <b>Extensions → RALNCS</b>.</p>
+
+<div class="two">
+<div>
+<h2><span class="n">2</span>Веер RAL / NCS</h2>
+<p>Кнопка «Веер» на панели или <b>Extensions → RALNCS → Веер RAL / NCS</b>.</p>
+<ol>
+  <li>Вкладка <span class="btn">RAL Classic</span> (216 цветов) или <span class="btn">NCS 1950</span> (1950 цветов). Поиск по коду или названию: <i>3020</i>, <i>traffic</i>, <i>0580-Y80R</i>.</li>
+  <li>Клик по цвету — справа крупный образец, код, HEX и RGB.</li>
+  <li><span class="btn primary">Создать материал</span> — материал <i>RAL 3020 Traffic red</i> появится в модели.<br>
+      <span class="btn">Создать и красить</span> — то же плюс сразу инструмент «Заливка».</li>
+</ol>
+<p class="note">Цвета на экране — sRGB-приближение. Мониторы передают цвет по-разному: финальное решение сверяйте с физическим веером.</p>
+</div>
+
+<div>
+<h2><span class="n">3</span>Анализ материалов (ТЗ)</h2>
+<p>Кнопка «Анализ» на панели или <b>Extensions → RALNCS → Анализ материалов (ТЗ)</b>. Плагин берёт <b>все</b> материалы модели (у текстурных — усреднённый цвет текстуры, метка «текстура») и для каждого находит ближайший RAL и NCS.</p>
+<p>Столбец <b>ΔE</b> — насколько подобранный цвет отличается от исходного:
+<span class="pill ok">&lt;1</span> отлично &nbsp;<span class="pill good">&lt;2</span> хорошо &nbsp;<span class="pill warn">&lt;5</span> заметно &nbsp;<span class="pill bad">≥5</span> цвет вне палитры.</p>
+<ul>
+  <li><span class="btn">Столбцы ▾</span> — включить/выключить столбцы, поменять порядок; группы RAL и NCS можно скрыть или переставить целиком. Настройка запоминается.</li>
+  <li><span class="btn primary">Скопировать ТЗ</span> — в буфер уходят ровно те столбцы, что на экране. В Google Таблице / Excel нажмите <kbd>Ctrl+V</kbd>: колонки «Цвет» вставятся с реальной заливкой, RGB — в формате ТЗ (<i>240-211-208</i>).</li>
+  <li><span class="btn">Применить RAL</span> / <span class="btn">Применить NCS</span> — перекрасить выбранные галочками материалы в точный цвет палитры. Отмена — <kbd>Ctrl+Z</kbd>.</li>
+  <li><b>тонировать текстурные</b> — по умолчанию выключено: текстуры не трогаются. Включите, чтобы SketchUp затонировал текстуру в цвет палитры.</li>
+</ul>
+</div>
+</div>
+
+<div class="note"><b>Известное ограничение.</b> При загруженном Enscape 4.1 откат (<kbd>Ctrl+Z</kbd>) тонирования текстур может закрыть SketchUp — это ошибка Enscape. Перед массовым тонированием сохраните модель; помогает обновление Enscape.</div>
+
+<footer>
+  <span>Авторы: Ruslan Tkachenko и Maksar Sanjeev · Apache 2.0 · B&amp;A community</span>
+  <span>github.com/B-A-community/ralncs</span>
+</footer>
+</body>
+</html>

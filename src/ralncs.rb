@@ -3,13 +3,13 @@
 
 require 'sketchup.rb'
 require 'extensions.rb'
+require_relative 'ralncs/lang'
 
 module RALNCS
   unless file_loaded?(__FILE__)
     ex = SketchupExtension.new('RALNCS', 'ralncs/main')
-    ex.description = 'Палитры RAL Classic и NCS 1950: веер цветов, покраска и ' \
-                     'автоматический подбор ближайших RAL/NCS для материалов модели (ТЗ).'
-    ex.version     = '0.4.0'
+    ex.description = RALNCS.t(:ext_description)
+    ex.version     = '1.0'
     ex.creator     = 'Maksar & Ruslan'
     ex.copyright   = '2026'
     Sketchup.register_extension(ex, true)

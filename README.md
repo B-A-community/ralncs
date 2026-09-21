@@ -53,14 +53,20 @@
 src/
   ralncs.rb              регистрация расширения
   ralncs/
-    main.rb              меню
+    main.rb              меню и панель инструментов
+    lang.rb              строки Ruby-части (ru/en)
+    about.rb             окно «О плагине»
     color_math.rb        sRGB→Lab (D65), CIEDE2000
     palette.rb           загрузка палитр, поиск ближайшего цвета
     audit.rb             анализ материалов + применение цветов
     fan.rb               веер, создание материалов
     data/*.json          палитры (генерируются tools/build_data.ps1)
     html/*.html          интерфейс (UI::HtmlDialog)
+    html/i18n.js         строки окон (ru/en)
+design/                  дизайн-код для всех плагинов B&A (CSS, JS, шаблон, иконки)
+docs/                    краткие инструкции (html → pdf)
 tools/build_data.ps1     генерация data/*.json из открытых датасетов
+tools/su_exec.ps1        Ruby в работающем SketchUp через sketchup_mcp_server
 ```
 
 ## Источники данных и оговорки

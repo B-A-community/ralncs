@@ -2,6 +2,7 @@
 # Клик по цвету — создание материала и, по желанию, сразу инструмент «Заливка».
 
 require 'json'
+require_relative 'lang'
 require_relative 'palette'
 
 module RALNCS
@@ -11,7 +12,7 @@ module RALNCS
     def show
       @dialog&.close
       @dialog = UI::HtmlDialog.new(
-        dialog_title: 'RALNCS — веер цветов',
+        dialog_title: RALNCS.t(:title_fan),
         preferences_key: 'ralncs_fan',
         width: 900,
         height: 660,
@@ -46,7 +47,7 @@ module RALNCS
       materials = model.materials
       m = materials[name]
       unless m
-        model.start_operation('RALNCS: создать материал', true)
+        model.start_operation(RALNCS.t(:op_create), true)
         m = materials.add(name)
         m.color = Sketchup::Color.new(*params['rgb'])
         model.commit_operation

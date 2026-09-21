@@ -6,6 +6,7 @@
 # тонирует текстуру — поэтому она включается отдельной опцией.
 
 require 'json'
+require_relative 'lang'
 require_relative 'palette'
 require_relative 'color_math'
 
@@ -19,13 +20,13 @@ module RALNCS
     def show
       model = Sketchup.active_model
       if model.materials.count.zero?
-        UI.messagebox('В модели нет материалов.')
+        UI.messagebox(RALNCS.t(:no_materials))
         return
       end
 
       @dialog&.close
       @dialog = UI::HtmlDialog.new(
-        dialog_title: 'RALNCS — анализ материалов (ТЗ)',
+        dialog_title: RALNCS.t(:title_audit),
         preferences_key: 'ralncs_audit',
         width: 980,
         height: 640,
@@ -99,7 +100,7 @@ module RALNCS
       palette_key = params['palette'] == 'ncs' ? :ncs : :ral
       tint = params['tint'] == true
 
-      model.start_operation("RALNCS: применить #{palette_key.to_s.upcase}", true)
+      model.start_operation(RALNCS.t(:op_apply, palette_key.to_s.upcase), true)
       params['names'].each do |name|
         m = model.materials[name]
         next unless m

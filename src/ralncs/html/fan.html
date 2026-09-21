@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>RALNCS — веер цветов</title>
+<title data-t="fan_title">RALNCS — веер цветов</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -65,34 +65,36 @@
   <header>
     <button class="tab on" id="tabRal">RAL Classic</button>
     <button class="tab" id="tabNcs">NCS 1950</button>
-    <input id="search" type="search" placeholder="Поиск: 3020, traffic, 0580-Y80R…">
+    <input id="search" type="search" data-t-ph="search_ph" placeholder="Поиск: 3020, traffic, 0580-Y80R…">
   </header>
   <div id="main">
     <div id="groups"></div>
     <div id="side">
       <div id="bigsw"></div>
-      <div id="selcode">Выберите цвет</div>
+      <div id="selcode" data-t="pick">Выберите цвет</div>
       <div id="selname"></div>
       <div id="selvals"></div>
-      <button id="btnMat" class="primary" disabled>Создать материал</button>
-      <button id="btnPaint" disabled>Создать и красить</button>
+      <button id="btnMat" class="primary" disabled data-t="btn_mat">Создать материал</button>
+      <button id="btnPaint" disabled data-t="btn_paint">Создать и красить</button>
     </div>
   </div>
-  <footer>
+  <footer data-t="fan_footer">
     Цвета показаны в sRGB-приближении для экрана. Мониторы передают цвет по-разному —
     финальное решение сверяйте с физическим веером RAL/NCS.
   </footer>
   <div id="toast"></div>
 
+<script src="i18n.js"></script>
 <script>
+  applyLang();
   var DATA = { ral: [], ncs: [] };
   var activeTab = 'ral';
   var selected = null;
 
   var RAL_GROUPS = {
-    '1': 'RAL 1xxx — жёлтые', '2': 'RAL 2xxx — оранжевые', '3': 'RAL 3xxx — красные',
-    '4': 'RAL 4xxx — фиолетовые', '5': 'RAL 5xxx — синие', '6': 'RAL 6xxx — зелёные',
-    '7': 'RAL 7xxx — серые', '8': 'RAL 8xxx — коричневые', '9': 'RAL 9xxx — белые и чёрные'
+    '1': t('ral_1'), '2': t('ral_2'), '3': t('ral_3'),
+    '4': t('ral_4'), '5': t('ral_5'), '6': t('ral_6'),
+    '7': t('ral_7'), '8': t('ral_8'), '9': t('ral_9')
   };
 
   function esc(s) {
@@ -122,11 +124,11 @@
       var title, order;
       if (activeTab === 'ral') {
         var digit = (c.code.match(/RAL (\d)/) || [])[1] || '?';
-        title = RAL_GROUPS[digit] || 'Прочие';
+        title = RAL_GROUPS[digit] || t('ral_other');
         order = parseInt(digit, 10) || 99;
       } else {
         var p = parseNcs(c.code);
-        title = p.hue === 'N' ? 'Нейтральные (N)' : 'Оттенок ' + p.hue;
+        title = p.hue === 'N' ? t('ncs_neutral') : t('ncs_hue') + p.hue;
         order = hueOrder(p.hue);
       }
       if (!groups[title]) groups[title] = { order: order, items: [] };
@@ -197,8 +199,7 @@
       code: selected.code, name: selected.name || null,
       hex: selected.hex, rgb: selected.rgb, paint: paint
     }));
-    toast(paint ? 'Материал создан — инструмент «Заливка» активен'
-                : 'Материал «' + selected.code + '» создан');
+    toast(paint ? t('toast_paint') : tf('toast_mat', { c: selected.code }));
   }
 
   function switchTab(tab) {
@@ -208,7 +209,7 @@
     document.getElementById('tabNcs').classList.toggle('on', tab === 'ncs');
     document.getElementById('btnMat').disabled = true;
     document.getElementById('btnPaint').disabled = true;
-    document.getElementById('selcode').textContent = 'Выберите цвет';
+    document.getElementById('selcode').textContent = t('pick');
     document.getElementById('selname').textContent = '';
     document.getElementById('selvals').textContent = '';
     document.getElementById('bigsw').style.background = '';

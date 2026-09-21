@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>RALNCS — анализ материалов</title>
+<title data-t="audit_title">RALNCS — анализ материалов</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -79,19 +79,19 @@
 </head>
 <body>
   <header>
-    <label class="opt"><input type="checkbox" id="checkAll" checked> все</label>
-    <button id="btnCopy" class="primary">Скопировать ТЗ (в Google Таблицы)</button>
-    <button id="btnApplyRal">Применить RAL</button>
-    <button id="btnApplyNcs">Применить NCS</button>
-    <label class="opt" title="Перекрашивать и текстурные материалы: SketchUp затонирует текстуру в цвет палитры">
-      <input type="checkbox" id="optTint"> тонировать текстурные
+    <label class="opt"><input type="checkbox" id="checkAll" checked> <span data-t="all">все</span></label>
+    <button id="btnCopy" class="primary" data-t="btn_copy">Скопировать ТЗ (в Google Таблицы)</button>
+    <button id="btnApplyRal" data-t="btn_apply_ral">Применить RAL</button>
+    <button id="btnApplyNcs" data-t="btn_apply_ncs">Применить NCS</button>
+    <label class="opt" data-t-title="tint_title" title="Перекрашивать и текстурные материалы: SketchUp затонирует текстуру в цвет палитры">
+      <input type="checkbox" id="optTint"> <span data-t="tint_label">тонировать текстурные</span>
     </label>
     <span class="spacer"></span>
-    <button id="btnCols">Столбцы ▾</button>
-    <button id="btnRescan">Обновить</button>
+    <button id="btnCols" data-t="btn_cols">Столбцы ▾</button>
+    <button id="btnRescan" data-t="btn_rescan">Обновить</button>
     <div id="colpanel"></div>
   </header>
-  <div id="status"></div>
+  <div id="status" data-t="scanning">Считаю ближайшие RAL и NCS для материалов модели…</div>
   <div id="wrap">
     <table>
       <thead>
@@ -103,34 +103,182 @@
   </div>
   <div id="toast"></div>
 
+<script>window.sketchup={ready:function(){},rescan:function(){},apply:function(j){window.LAST_APPLY=j},save_columns:function(s){window.LAST_COLS=s}};</script>
+<script>// Язык интерфейса окон. build.ps1 -Lang en подменяет первую строку.
+var LANG = 'ru';
+
+var I18N = {
+  ru: {
+    // ---- анализ материалов ----
+    audit_title: 'RALNCS — анализ материалов',
+    all: 'все',
+    btn_copy: 'Скопировать ТЗ (в Google Таблицы)',
+    btn_apply_ral: 'Применить RAL',
+    btn_apply_ncs: 'Применить NCS',
+    tint_label: 'тонировать текстурные',
+    tint_title: 'Перекрашивать и текстурные материалы: SketchUp затонирует текстуру в цвет палитры',
+    btn_cols: 'Столбцы ▾',
+    btn_rescan: 'Обновить',
+    scanning: 'Считаю ближайшие RAL и NCS для материалов модели…',
+    grp_mat: 'Материал',
+    col_name: 'Материал', col_type: 'Тип', col_color: 'Цвет', col_hex: 'HEX', col_rgb: 'RGB',
+    col_ral_name: 'Название',
+    exp_name: 'Материал', exp_type: 'Тип', exp_color: 'Цвет',
+    exp_hex_model: 'HEX в модели', exp_rgb_model: 'RGB в модели',
+    exp_color_ral: 'Цвет RAL', exp_ral_name: 'Название RAL', exp_ral_hex: 'RAL HEX', exp_ral_rgb: 'RAL RGB', exp_ral_de: 'ΔE RAL',
+    exp_color_ncs: 'Цвет NCS', exp_ncs_hex: 'NCS HEX', exp_ncs_rgb: 'NCS RGB', exp_ncs_de: 'ΔE NCS',
+    de_excellent: 'отличное совпадение', de_good: 'хорошее совпадение',
+    de_notice: 'заметная разница', de_out: 'цвет вне палитры',
+    type_tex: 'текстура', type_solid: 'заливка',
+    tex_avg: ' — цвет усреднён по текстуре',
+    mv_up: 'Выше', mv_down: 'Ниже', mv_left: 'Левее', mv_right: 'Правее',
+    cols_hint: 'Порядок сверху вниз = слева направо. Копируются только видимые.',
+    cols_reset: 'Сбросить',
+    status: 'Материалов: {n} (однотонных {solid}, текстурных {tex})',
+    status_tex: ' • у текстурных цвет усреднён по текстуре',
+    status_cols: ' • столбцов: {v} из {t}',
+    status_de: ' • ΔE — визуальная разница с экранным цветом (меньше — точнее)',
+    toast_none: 'Не выбрано ни одного материала',
+    toast_nocols: 'Все столбцы скрыты — включите нужные в «Столбцы»',
+    toast_copied: 'Скопировано: {r} строк × {c} столбцов. Вставьте в Google Таблицу (Ctrl+V).',
+    toast_only_tex: 'Среди выбранных только текстурные материалы — включите «тонировать текстурные», чтобы перекрасить их',
+    confirm_apply: 'Перекрасить {n} материал(ов) в точные цвета {p}?',
+    confirm_tint: '\nИз них текстурных: {n} — их текстура будет затонирована в цвет {p}.',
+    confirm_notint: '\nТекстурные ({n} шт.) не трогаем — включите «тонировать текстурные», если нужно.',
+    confirm_undo: '\nДействие можно отменить (Ctrl+Z).',
+
+    // ---- веер ----
+    fan_title: 'RALNCS — веер цветов',
+    search_ph: 'Поиск: 3020, traffic, 0580-Y80R…',
+    pick: 'Выберите цвет',
+    btn_mat: 'Создать материал',
+    btn_paint: 'Создать и красить',
+    fan_footer: 'Цвета показаны в sRGB-приближении для экрана. Мониторы передают цвет по-разному — финальное решение сверяйте с физическим веером RAL/NCS.',
+    ral_1: 'RAL 1xxx — жёлтые', ral_2: 'RAL 2xxx — оранжевые', ral_3: 'RAL 3xxx — красные',
+    ral_4: 'RAL 4xxx — фиолетовые', ral_5: 'RAL 5xxx — синие', ral_6: 'RAL 6xxx — зелёные',
+    ral_7: 'RAL 7xxx — серые', ral_8: 'RAL 8xxx — коричневые', ral_9: 'RAL 9xxx — белые и чёрные',
+    ral_other: 'Прочие',
+    ncs_neutral: 'Нейтральные (N)', ncs_hue: 'Оттенок ',
+    toast_paint: 'Материал создан — инструмент «Заливка» активен',
+    toast_mat: 'Материал «{c}» создан',
+
+    // ---- о плагине ----
+    about_title: 'О плагине RALNCS',
+    about_desc: 'Веер RAL Classic и NCS 1950, подбор ближайших RAL/NCS для материалов модели и ТЗ в один клик.',
+    about_authors: 'Авторы',
+    about_names: 'Ruslan Tkachenko и Maksar Sanjeev',
+    about_ver: 'версия ',
+    about_lic: 'Apache 2.0 · B&A community',
+    btn_close: 'Закрыть'
+  },
+
+  en: {
+    audit_title: 'RALNCS — material audit',
+    all: 'all',
+    btn_copy: 'Copy spec (to Google Sheets)',
+    btn_apply_ral: 'Apply RAL',
+    btn_apply_ncs: 'Apply NCS',
+    tint_label: 'tint textured',
+    tint_title: 'Also recolor textured materials: SketchUp tints the texture to the palette color',
+    btn_cols: 'Columns ▾',
+    btn_rescan: 'Refresh',
+    scanning: 'Finding the nearest RAL and NCS for the model materials…',
+    grp_mat: 'Material',
+    col_name: 'Material', col_type: 'Type', col_color: 'Color', col_hex: 'HEX', col_rgb: 'RGB',
+    col_ral_name: 'Name',
+    exp_name: 'Material', exp_type: 'Type', exp_color: 'Color',
+    exp_hex_model: 'HEX in model', exp_rgb_model: 'RGB in model',
+    exp_color_ral: 'RAL color', exp_ral_name: 'RAL name', exp_ral_hex: 'RAL HEX', exp_ral_rgb: 'RAL RGB', exp_ral_de: 'ΔE RAL',
+    exp_color_ncs: 'NCS color', exp_ncs_hex: 'NCS HEX', exp_ncs_rgb: 'NCS RGB', exp_ncs_de: 'ΔE NCS',
+    de_excellent: 'excellent match', de_good: 'good match',
+    de_notice: 'noticeable difference', de_out: 'outside the palette',
+    type_tex: 'texture', type_solid: 'solid',
+    tex_avg: ' — color averaged from the texture',
+    mv_up: 'Up', mv_down: 'Down', mv_left: 'Left', mv_right: 'Right',
+    cols_hint: 'Top-to-bottom order = left-to-right. Only visible columns are copied.',
+    cols_reset: 'Reset',
+    status: 'Materials: {n} ({solid} solid, {tex} textured)',
+    status_tex: ' • textured: color averaged from the texture',
+    status_cols: ' • columns: {v} of {t}',
+    status_de: ' • ΔE — visual difference from the on-screen color (lower is closer)',
+    toast_none: 'No materials selected',
+    toast_nocols: 'All columns are hidden — enable some under “Columns”',
+    toast_copied: 'Copied: {r} rows × {c} columns. Paste into Google Sheets (Ctrl+V).',
+    toast_only_tex: 'Only textured materials are selected — enable “tint textured” to recolor them',
+    confirm_apply: 'Recolor {n} material(s) to exact {p} colors?',
+    confirm_tint: '\n{n} of them are textured — their texture will be tinted to the {p} color.',
+    confirm_notint: '\nTextured ({n}) are left untouched — enable “tint textured” if needed.',
+    confirm_undo: '\nThis can be undone (Ctrl+Z).',
+
+    fan_title: 'RALNCS — color fan',
+    search_ph: 'Search: 3020, traffic, 0580-Y80R…',
+    pick: 'Pick a color',
+    btn_mat: 'Create material',
+    btn_paint: 'Create and paint',
+    fan_footer: 'Colors are shown as sRGB approximations for the screen. Monitors differ — verify the final choice against a physical RAL/NCS fan deck.',
+    ral_1: 'RAL 1xxx — yellows', ral_2: 'RAL 2xxx — oranges', ral_3: 'RAL 3xxx — reds',
+    ral_4: 'RAL 4xxx — violets', ral_5: 'RAL 5xxx — blues', ral_6: 'RAL 6xxx — greens',
+    ral_7: 'RAL 7xxx — greys', ral_8: 'RAL 8xxx — browns', ral_9: 'RAL 9xxx — whites and blacks',
+    ral_other: 'Other',
+    ncs_neutral: 'Neutrals (N)', ncs_hue: 'Hue ',
+    toast_paint: 'Material created — Paint Bucket tool is active',
+    toast_mat: 'Material “{c}” created',
+
+    about_title: 'About RALNCS',
+    about_desc: 'RAL Classic and NCS 1950 color fan, nearest RAL/NCS for every model material, and a one-click color spec.',
+    about_authors: 'Authors',
+    about_names: 'Ruslan Tkachenko and Maksar Sanjeev',
+    about_ver: 'version ',
+    about_lic: 'Apache 2.0 · B&A community',
+    btn_close: 'Close'
+  }
+};
+
+var T = I18N[LANG] || I18N.ru;
+function t(key) { var s = T[key]; return s === undefined ? key : s; }
+// tf('status', {n: 3}) — подстановка {плейсхолдеров}
+function tf(key, vars) {
+  return t(key).replace(/\{(\w+)\}/g, function (_, k) { return vars[k] !== undefined ? vars[k] : '{' + k + '}'; });
+}
+// Разметка держит русский текст как запасной; data-t / data-t-title / data-t-ph переводят на месте
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t(el.getAttribute('data-t')); });
+  document.querySelectorAll('[data-t-title]').forEach(function (el) { el.title = t(el.getAttribute('data-t-title')); });
+  document.querySelectorAll('[data-t-ph]').forEach(function (el) { el.placeholder = t(el.getAttribute('data-t-ph')); });
+  var title = document.querySelector('title[data-t]');
+  if (title) document.title = t(title.getAttribute('data-t'));
+}
+</script>
 <script>
+  applyLang();
   var DATA = { rows: [], solid: 0, textured: 0 };
 
   // ---------- Столбцы ----------
   // Экранная таблица и буфер обмена строятся из одного списка: что видно —
   // то и копируется, в том же порядке.
   var GROUPS = [
-    { key: 'mat', title: 'Материал', cols: [
-      { key: 'name',      title: 'Материал',      exp: 'Материал',          on: true },
-      { key: 'type',      title: 'Тип',           exp: 'Тип',               on: true },
-      { key: 'color',     title: 'Цвет',          exp: 'Цвет',              on: true },
-      { key: 'hex',       title: 'HEX',           exp: 'HEX в модели',      on: true },
-      { key: 'rgb',       title: 'RGB',           exp: 'RGB в модели',      on: false }
+    { key: 'mat', title: t('grp_mat'), cols: [
+      { key: 'name',      title: t('col_name'),  exp: t('exp_name'),      on: true },
+      { key: 'type',      title: t('col_type'),  exp: t('exp_type'),      on: true },
+      { key: 'color',     title: t('col_color'), exp: t('exp_color'),     on: true },
+      { key: 'hex',       title: t('col_hex'),   exp: t('exp_hex_model'), on: true },
+      { key: 'rgb',       title: t('col_rgb'),   exp: t('exp_rgb_model'), on: false }
     ]},
     { key: 'ral', title: 'RAL', cols: [
-      { key: 'ral_color', title: 'Цвет',          exp: 'Цвет RAL',          on: true },
-      { key: 'ral_code',  title: 'RAL',           exp: 'RAL',               on: true },
-      { key: 'ral_name',  title: 'Название',      exp: 'Название RAL',      on: true },
-      { key: 'ral_hex',   title: 'HEX',           exp: 'RAL HEX',           on: false },
-      { key: 'ral_rgb',   title: 'RGB',           exp: 'RAL RGB',           on: false },
-      { key: 'ral_de',    title: 'ΔE',            exp: 'ΔE RAL',            on: true }
+      { key: 'ral_color', title: t('col_color'),    exp: t('exp_color_ral'), on: true },
+      { key: 'ral_code',  title: 'RAL',             exp: 'RAL',              on: true },
+      { key: 'ral_name',  title: t('col_ral_name'), exp: t('exp_ral_name'),  on: true },
+      { key: 'ral_hex',   title: t('col_hex'),      exp: t('exp_ral_hex'),   on: false },
+      { key: 'ral_rgb',   title: t('col_rgb'),      exp: t('exp_ral_rgb'),   on: false },
+      { key: 'ral_de',    title: 'ΔE',              exp: t('exp_ral_de'),    on: true }
     ]},
     { key: 'ncs', title: 'NCS', cols: [
-      { key: 'ncs_color', title: 'Цвет',          exp: 'Цвет NCS',          on: true },
-      { key: 'ncs_code',  title: 'NCS',           exp: 'NCS',               on: true },
-      { key: 'ncs_hex',   title: 'HEX',           exp: 'NCS HEX',           on: false },
-      { key: 'ncs_rgb',   title: 'RGB',           exp: 'NCS RGB',           on: false },
-      { key: 'ncs_de',    title: 'ΔE',            exp: 'ΔE NCS',            on: true }
+      { key: 'ncs_color', title: t('col_color'), exp: t('exp_color_ncs'), on: true },
+      { key: 'ncs_code',  title: 'NCS',          exp: 'NCS',              on: true },
+      { key: 'ncs_hex',   title: t('col_hex'),   exp: t('exp_ncs_hex'),   on: false },
+      { key: 'ncs_rgb',   title: t('col_rgb'),   exp: t('exp_ncs_rgb'),   on: false },
+      { key: 'ncs_de',    title: 'ΔE',           exp: t('exp_ncs_de'),    on: true }
     ]}
   ];
   var COLDEF = {};
@@ -200,8 +348,8 @@
   }
   function deClass(de) { return de < 1 ? 'de0' : de < 2 ? 'de1' : de < 5 ? 'de2' : 'de3'; }
   function deTitle(de) {
-    return de < 1 ? 'отличное совпадение' : de < 2 ? 'хорошее совпадение'
-         : de < 5 ? 'заметная разница' : 'цвет вне палитры';
+    return de < 1 ? t('de_excellent') : de < 2 ? t('de_good')
+         : de < 5 ? t('de_notice') : t('de_out');
   }
   // "#F0D3D0" -> "240-211-208" — формат RGB, принятый в ТЗ на фасады
   function hexToRgbStr(hex) {
@@ -214,7 +362,7 @@
   function cellValue(r, key) {
     switch (key) {
       case 'name':      return { v: r.display_name };
-      case 'type':      return { v: r.textured ? 'текстура' : 'заливка' };
+      case 'type':      return { v: r.textured ? t('type_tex') : t('type_solid') };
       case 'color':     return { v: '', bg: r.hex };
       case 'hex':       return { v: r.hex };
       case 'rgb':       return { v: hexToRgbStr(r.hex) };
@@ -238,9 +386,9 @@
     switch (key) {
       case 'name':
         return '<td class="matname" title="' + esc(r.display_name) +
-               (r.textured ? ' — цвет усреднён по текстуре' : '') + '">' + esc(r.display_name) + '</td>';
+               (r.textured ? esc(t('tex_avg')) : '') + '">' + esc(r.display_name) + '</td>';
       case 'type':
-        return '<td>' + (r.textured ? '<span class="pill tex">текстура</span>' : '<span class="solid">заливка</span>') + '</td>';
+        return '<td>' + (r.textured ? '<span class="pill tex">' + esc(t('type_tex')) + '</span>' : '<span class="solid">' + esc(t('type_solid')) + '</span>') + '</td>';
       case 'color':     return '<td><span class="sw" style="background:' + r.hex + '"></span></td>';
       case 'ral_color': return '<td class="b-ral"><span class="sw" style="background:' + r.ral.hex + '"></span></td>';
       case 'ncs_color': return '<td class="b-ncs"><span class="sw" style="background:' + r.ncs.hex + '"></span></td>';
@@ -291,18 +439,18 @@
     p.innerHTML = CFG.map(function (g, gi) {
       var head = '<div class="g-head">' +
         '<input type="checkbox" data-g="' + gi + '"' + (g.on ? ' checked' : '') + '> ' + esc(gtitle[g.key]) +
-        '<span class="mv"><button data-mg="' + gi + '" data-d="-1"' + (gi === 0 ? ' disabled' : '') + ' title="Выше">▲</button>' +
-        '<button data-mg="' + gi + '" data-d="1"' + (gi === CFG.length - 1 ? ' disabled' : '') + ' title="Ниже">▼</button></span></div>';
+        '<span class="mv"><button data-mg="' + gi + '" data-d="-1"' + (gi === 0 ? ' disabled' : '') + ' title="' + esc(t('mv_up')) + '">▲</button>' +
+        '<button data-mg="' + gi + '" data-d="1"' + (gi === CFG.length - 1 ? ' disabled' : '') + ' title="' + esc(t('mv_down')) + '">▼</button></span></div>';
       var cols = g.cols.map(function (c, ci) {
         return '<div class="c' + (c.on ? '' : ' off') + '">' +
           '<input type="checkbox" data-g="' + gi + '" data-c="' + ci + '"' + (c.on ? ' checked' : '') + '> ' + esc(COLDEF[c.key].exp) +
-          '<span class="mv"><button data-mc="' + gi + ':' + ci + '" data-d="-1"' + (ci === 0 ? ' disabled' : '') + ' title="Левее">▲</button>' +
-          '<button data-mc="' + gi + ':' + ci + '" data-d="1"' + (ci === g.cols.length - 1 ? ' disabled' : '') + ' title="Правее">▼</button></span></div>';
+          '<span class="mv"><button data-mc="' + gi + ':' + ci + '" data-d="-1"' + (ci === 0 ? ' disabled' : '') + ' title="' + esc(t('mv_left')) + '">▲</button>' +
+          '<button data-mc="' + gi + ':' + ci + '" data-d="1"' + (ci === g.cols.length - 1 ? ' disabled' : '') + ' title="' + esc(t('mv_right')) + '">▼</button></span></div>';
       }).join('');
       return '<div class="g' + (g.on ? '' : ' off') + '">' + head + cols + '</div>';
     }).join('') +
-    '<div class="foot"><span class="hint">Порядок сверху вниз = слева направо. Копируются только видимые.</span>' +
-    '<button id="colsReset">Сбросить</button></div>';
+    '<div class="foot"><span class="hint">' + esc(t('cols_hint')) + '</span>' +
+    '<button id="colsReset">' + esc(t('cols_reset')) + '</button></div>';
   }
 
   function cfgChanged() {
@@ -313,11 +461,10 @@
   }
 
   function updateStatus() {
-    var status = 'Материалов: ' + DATA.rows.length +
-                 ' (однотонных ' + DATA.solid + ', текстурных ' + DATA.textured + ')';
-    if (DATA.textured > 0) status += ' • у текстурных цвет усреднён по текстуре';
-    status += ' • столбцов: ' + visibleCols().length + ' из ' + Object.keys(COLDEF).length;
-    status += ' • ΔE — визуальная разница с экранным цветом (меньше — точнее)';
+    var status = tf('status', { n: DATA.rows.length, solid: DATA.solid, tex: DATA.textured });
+    if (DATA.textured > 0) status += t('status_tex');
+    status += tf('status_cols', { v: visibleCols().length, t: Object.keys(COLDEF).length });
+    status += t('status_de');
     document.getElementById('status').textContent = status;
   }
 
@@ -402,32 +549,30 @@
   function copyTz() {
     var rows = checkedRows();
     var cols = visibleCols();
-    if (!rows.length) { toast('Не выбрано ни одного материала'); return; }
-    if (!cols.length)  { toast('Все столбцы скрыты — включите нужные в «Столбцы»'); return; }
+    if (!rows.length) { toast(t('toast_none')); return; }
+    if (!cols.length)  { toast(t('toast_nocols')); return; }
     copyBoth(buildTsv(rows, cols), buildHtmlTable(rows, cols), function () {
-      toast('Скопировано: ' + rows.length + ' строк × ' + cols.length + ' столбцов. Вставьте в Google Таблицу (Ctrl+V).');
+      toast(tf('toast_copied', { r: rows.length, c: cols.length }));
     });
   }
 
   function apply(palette) {
     var rows = checkedRows();
-    if (!rows.length) { toast('Не выбрано ни одного материала'); return; }
+    if (!rows.length) { toast(t('toast_none')); return; }
     var tint = document.getElementById('optTint').checked;
     var solid = rows.filter(function (r) { return !r.textured; });
     var textured = rows.length - solid.length;
     var target = tint ? rows : solid;
     if (!target.length) {
-      toast('Среди выбранных только текстурные материалы — включите «тонировать текстурные», чтобы перекрасить их');
+      toast(t('toast_only_tex'));
       return;
     }
     var label = palette.toUpperCase();
-    var msg = 'Перекрасить ' + target.length + ' материал(ов) в точные цвета ' + label + '?';
+    var msg = tf('confirm_apply', { n: target.length, p: label });
     if (textured > 0) {
-      msg += tint
-        ? '\nИз них текстурных: ' + textured + ' — их текстура будет затонирована в цвет ' + label + '.'
-        : '\nТекстурные (' + textured + ' шт.) не трогаем — включите «тонировать текстурные», если нужно.';
+      msg += tint ? tf('confirm_tint', { n: textured, p: label }) : tf('confirm_notint', { n: textured });
     }
-    msg += '\nДействие можно отменить (Ctrl+Z).';
+    msg += t('confirm_undo');
     if (!confirm(msg)) return;
     sketchup.apply(JSON.stringify({
       palette: palette,
@@ -440,7 +585,10 @@
   document.getElementById('btnCopy').addEventListener('click', copyTz);
   document.getElementById('btnApplyRal').addEventListener('click', function () { apply('ral'); });
   document.getElementById('btnApplyNcs').addEventListener('click', function () { apply('ncs'); });
-  document.getElementById('btnRescan').addEventListener('click', function () { sketchup.rescan(); });
+  document.getElementById('btnRescan').addEventListener('click', function () {
+    document.getElementById('status').textContent = t('scanning');
+    sketchup.rescan();
+  });
   document.getElementById('checkAll').addEventListener('change', function (e) {
     document.querySelectorAll('.rowcheck').forEach(function (cb) { cb.checked = e.target.checked; });
   });
@@ -485,10 +633,7 @@
     }
   });
 
-  window.addEventListener('DOMContentLoaded', function () { sketchup.ready(); });
+  window.addEventListener('DOMContentLoaded', function () { var s=document.createElement('script'); s.src='fan_data.js'; s.onload=function(){ var c=document.createElement('script'); c.src='colormatch.js'; document.body.appendChild(c); }; document.body.appendChild(s); });
 </script>
-<script>window.sketchup={ready:function(){},rescan:function(){console.log('rescan')},apply:function(j){window.LAST_APPLY=j;console.log('apply',j)},save_columns:function(s){window.LAST_COLS=s;try{localStorage.setItem('ralncs_cols',s)}catch(e){}}};</script>
-<script src="fan_data.js"></script>
-<script src="colormatch.js"></script>
 </body>
 </html>

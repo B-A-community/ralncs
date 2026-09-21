@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title data-t="about_title">О плагине RALNCS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font: 13px/1.45 "Segoe UI", system-ui, sans-serif;
+    color: #1c1c1c; background: #f5f5f4;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  main { flex: 1; padding: 18px 20px 12px; display: flex; gap: 16px; align-items: flex-start; }
+  .logo { width: 56px; height: 56px; flex: none; }
+  h1 { font-size: 18px; font-weight: 700; line-height: 1.2; }
+  .ver { color: #888; font-size: 11px; margin-top: 2px; }
+  p { margin-top: 10px; }
+  .authors { margin-top: 12px; }
+  .authors b { display: block; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; font-weight: 600; margin-bottom: 3px; }
+  a { color: #2b6cb0; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .repo { margin-top: 12px; display: flex; align-items: center; gap: 6px; }
+  .repo svg { width: 16px; height: 16px; flex: none; }
+  footer {
+    padding: 10px 20px; background: #fff; border-top: 1px solid #ddd;
+    display: flex; align-items: center; gap: 10px;
+  }
+  footer .lic { color: #888; font-size: 11px; flex: 1; }
+  button {
+    font: inherit; padding: 6px 14px; border: 1px solid #bbb; border-radius: 6px;
+    background: #fff; cursor: pointer;
+  }
+  button:hover { background: #f0f0ef; }
+</style>
+</head>
+<body>
+  <main>
+    <svg class="logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <g transform="rotate(-54 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#C1121F"/></g>
+      <g transform="rotate(-18 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#F2A900"/></g>
+      <g transform="rotate(18 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#2F855A"/></g>
+      <g transform="rotate(54 12 19.5)"><rect x="9.8" y="4" width="4.4" height="15" rx="1.8" fill="#2B6CB0"/></g>
+      <circle cx="12" cy="19.5" r="2.6" fill="#3B3B38"/><circle cx="12" cy="19.5" r="1.1" fill="#F5F5F4"/>
+    </svg>
+    <div>
+      <h1>RALNCS</h1>
+      <div class="ver" id="ver"></div>
+      <p data-t="about_desc">Веер RAL Classic и NCS 1950, подбор ближайших RAL/NCS для материалов модели и ТЗ в один клик.</p>
+      <div class="authors">
+        <b data-t="about_authors">Авторы</b>
+        <span data-t="about_names">Ruslan Tkachenko и Maksar Sanjeev</span>
+      </div>
+      <div class="repo">
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path fill="#3B3B38" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        <a href="#" id="repo">github.com/B-A-community/ralncs</a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <span class="lic" data-t="about_lic">Apache 2.0 · B&amp;A community</span>
+    <button id="btnClose" data-t="btn_close">Закрыть</button>
+  </footer>
+<script>window.sketchup={ready:function(){init({version:'1.0'})},open_url:function(u){window.OPENED=u},close:function(){window.CLOSED=true}};</script>
+<script>// Язык интерфейса окон. build.ps1 -Lang en подменяет первую строку.
+var LANG = 'en';
+
+var I18N = {
+  ru: {
+    // ---- анализ материалов ----
+    audit_title: 'RALNCS — анализ материалов',
+    all: 'все',
+    btn_copy: 'Скопировать ТЗ (в Google Таблицы)',
+    btn_apply_ral: 'Применить RAL',
+    btn_apply_ncs: 'Применить NCS',
+    tint_label: 'тонировать текстурные',
+    tint_title: 'Перекрашивать и текстурные материалы: SketchUp затонирует текстуру в цвет палитры',
+    btn_cols: 'Столбцы ▾',
+    btn_rescan: 'Обновить',
+    scanning: 'Считаю ближайшие RAL и NCS для материалов модели…',
+    grp_mat: 'Материал',
+    col_name: 'Материал', col_type: 'Тип', col_color: 'Цвет', col_hex: 'HEX', col_rgb: 'RGB',
+    col_ral_name: 'Название',
+    exp_name: 'Материал', exp_type: 'Тип', exp_color: 'Цвет',
+    exp_hex_model: 'HEX в модели', exp_rgb_model: 'RGB в модели',
+    exp_color_ral: 'Цвет RAL', exp_ral_name: 'Название RAL', exp_ral_hex: 'RAL HEX', exp_ral_rgb: 'RAL RGB', exp_ral_de: 'ΔE RAL',
+    exp_color_ncs: 'Цвет NCS', exp_ncs_hex: 'NCS HEX', exp_ncs_rgb: 'NCS RGB', exp_ncs_de: 'ΔE NCS',
+    de_excellent: 'отличное совпадение', de_good: 'хорошее совпадение',
+    de_notice: 'заметная разница', de_out: 'цвет вне палитры',
+    type_tex: 'текстура', type_solid: 'заливка',
+    tex_avg: ' — цвет усреднён по текстуре',
+    mv_up: 'Выше', mv_down: 'Ниже', mv_left: 'Левее', mv_right: 'Правее',
+    cols_hint: 'Порядок сверху вниз = слева направо. Копируются только видимые.',
+    cols_reset: 'Сбросить',
+    status: 'Материалов: {n} (однотонных {solid}, текстурных {tex})',
+    status_tex: ' • у текстурных цвет усреднён по текстуре',
+    status_cols: ' • столбцов: {v} из {t}',
+    status_de: ' • ΔE — визуальная разница с экранным цветом (меньше — точнее)',
+    toast_none: 'Не выбрано ни одного материала',
+    toast_nocols: 'Все столбцы скрыты — включите нужные в «Столбцы»',
+    toast_copied: 'Скопировано: {r} строк × {c} столбцов. Вставьте в Google Таблицу (Ctrl+V).',
+    toast_only_tex: 'Среди выбранных только текстурные материалы — включите «тонировать текстурные», чтобы перекрасить их',
+    confirm_apply: 'Перекрасить {n} материал(ов) в точные цвета {p}?',
+    confirm_tint: '\nИз них текстурных: {n} — их текстура будет затонирована в цвет {p}.',
+    confirm_notint: '\nТекстурные ({n} шт.) не трогаем — включите «тонировать текстурные», если нужно.',
+    confirm_undo: '\nДействие можно отменить (Ctrl+Z).',
+
+    // ---- веер ----
+    fan_title: 'RALNCS — веер цветов',
+    search_ph: 'Поиск: 3020, traffic, 0580-Y80R…',
+    pick: 'Выберите цвет',
+    btn_mat: 'Создать материал',
+    btn_paint: 'Создать и красить',
+    fan_footer: 'Цвета показаны в sRGB-приближении для экрана. Мониторы передают цвет по-разному — финальное решение сверяйте с физическим веером RAL/NCS.',
+    ral_1: 'RAL 1xxx — жёлтые', ral_2: 'RAL 2xxx — оранжевые', ral_3: 'RAL 3xxx — красные',
+    ral_4: 'RAL 4xxx — фиолетовые', ral_5: 'RAL 5xxx — синие', ral_6: 'RAL 6xxx — зелёные',
+    ral_7: 'RAL 7xxx — серые', ral_8: 'RAL 8xxx — коричневые', ral_9: 'RAL 9xxx — белые и чёрные',
+    ral_other: 'Прочие',
+    ncs_neutral: 'Нейтральные (N)', ncs_hue: 'Оттенок ',
+    toast_paint: 'Материал создан — инструмент «Заливка» активен',
+    toast_mat: 'Материал «{c}» создан',
+
+    // ---- о плагине ----
+    about_title: 'О плагине RALNCS',
+    about_desc: 'Веер RAL Classic и NCS 1950, подбор ближайших RAL/NCS для материалов модели и ТЗ в один клик.',
+    about_authors: 'Авторы',
+    about_names: 'Ruslan Tkachenko и Maksar Sanjeev',
+    about_ver: 'версия ',
+    about_lic: 'Apache 2.0 · B&A community',
+    btn_close: 'Закрыть'
+  },
+
+  en: {
+    audit_title: 'RALNCS — material audit',
+    all: 'all',
+    btn_copy: 'Copy spec (to Google Sheets)',
+    btn_apply_ral: 'Apply RAL',
+    btn_apply_ncs: 'Apply NCS',
+    tint_label: 'tint textured',
+    tint_title: 'Also recolor textured materials: SketchUp tints the texture to the palette color',
+    btn_cols: 'Columns ▾',
+    btn_rescan: 'Refresh',
+    scanning: 'Finding the nearest RAL and NCS for the model materials…',
+    grp_mat: 'Material',
+    col_name: 'Material', col_type: 'Type', col_color: 'Color', col_hex: 'HEX', col_rgb: 'RGB',
+    col_ral_name: 'Name',
+    exp_name: 'Material', exp_type: 'Type', exp_color: 'Color',
+    exp_hex_model: 'HEX in model', exp_rgb_model: 'RGB in model',
+    exp_color_ral: 'RAL color', exp_ral_name: 'RAL name', exp_ral_hex: 'RAL HEX', exp_ral_rgb: 'RAL RGB', exp_ral_de: 'ΔE RAL',
+    exp_color_ncs: 'NCS color', exp_ncs_hex: 'NCS HEX', exp_ncs_rgb: 'NCS RGB', exp_ncs_de: 'ΔE NCS',
+    de_excellent: 'excellent match', de_good: 'good match',
+    de_notice: 'noticeable difference', de_out: 'outside the palette',
+    type_tex: 'texture', type_solid: 'solid',
+    tex_avg: ' — color averaged from the texture',
+    mv_up: 'Up', mv_down: 'Down', mv_left: 'Left', mv_right: 'Right',
+    cols_hint: 'Top-to-bottom order = left-to-right. Only visible columns are copied.',
+    cols_reset: 'Reset',
+    status: 'Materials: {n} ({solid} solid, {tex} textured)',
+    status_tex: ' • textured: color averaged from the texture',
+    status_cols: ' • columns: {v} of {t}',
+    status_de: ' • ΔE — visual difference from the on-screen color (lower is closer)',
+    toast_none: 'No materials selected',
+    toast_nocols: 'All columns are hidden — enable some under “Columns”',
+    toast_copied: 'Copied: {r} rows × {c} columns. Paste into Google Sheets (Ctrl+V).',
+    toast_only_tex: 'Only textured materials are selected — enable “tint textured” to recolor them',
+    confirm_apply: 'Recolor {n} material(s) to exact {p} colors?',
+    confirm_tint: '\n{n} of them are textured — their texture will be tinted to the {p} color.',
+    confirm_notint: '\nTextured ({n}) are left untouched — enable “tint textured” if needed.',
+    confirm_undo: '\nThis can be undone (Ctrl+Z).',
+
+    fan_title: 'RALNCS — color fan',
+    search_ph: 'Search: 3020, traffic, 0580-Y80R…',
+    pick: 'Pick a color',
+    btn_mat: 'Create material',
+    btn_paint: 'Create and paint',
+    fan_footer: 'Colors are shown as sRGB approximations for the screen. Monitors differ — verify the final choice against a physical RAL/NCS fan deck.',
+    ral_1: 'RAL 1xxx — yellows', ral_2: 'RAL 2xxx — oranges', ral_3: 'RAL 3xxx — reds',
+    ral_4: 'RAL 4xxx — violets', ral_5: 'RAL 5xxx — blues', ral_6: 'RAL 6xxx — greens',
+    ral_7: 'RAL 7xxx — greys', ral_8: 'RAL 8xxx — browns', ral_9: 'RAL 9xxx — whites and blacks',
+    ral_other: 'Other',
+    ncs_neutral: 'Neutrals (N)', ncs_hue: 'Hue ',
+    toast_paint: 'Material created — Paint Bucket tool is active',
+    toast_mat: 'Material “{c}” created',
+
+    about_title: 'About RALNCS',
+    about_desc: 'RAL Classic and NCS 1950 color fan, nearest RAL/NCS for every model material, and a one-click color spec.',
+    about_authors: 'Authors',
+    about_names: 'Ruslan Tkachenko and Maksar Sanjeev',
+    about_ver: 'version ',
+    about_lic: 'Apache 2.0 · B&A community',
+    btn_close: 'Close'
+  }
+};
+
+var T = I18N[LANG] || I18N.ru;
+function t(key) { var s = T[key]; return s === undefined ? key : s; }
+// tf('status', {n: 3}) — подстановка {плейсхолдеров}
+function tf(key, vars) {
+  return t(key).replace(/\{(\w+)\}/g, function (_, k) { return vars[k] !== undefined ? vars[k] : '{' + k + '}'; });
+}
+// Разметка держит русский текст как запасной; data-t / data-t-title / data-t-ph переводят на месте
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t(el.getAttribute('data-t')); });
+  document.querySelectorAll('[data-t-title]').forEach(function (el) { el.title = t(el.getAttribute('data-t-title')); });
+  document.querySelectorAll('[data-t-ph]').forEach(function (el) { el.placeholder = t(el.getAttribute('data-t-ph')); });
+  var title = document.querySelector('title[data-t]');
+  if (title) document.title = t(title.getAttribute('data-t'));
+}
+</script>
+<script>
+  applyLang();
+  var REPO = 'https://github.com/B-A-community/ralncs';
+  function init(d) { document.getElementById('ver').textContent = d.version ? t('about_ver') + d.version : ''; }
+  document.getElementById('repo').addEventListener('click', function (e) { e.preventDefault(); sketchup.open_url(REPO); });
+  document.getElementById('btnClose').addEventListener('click', function () { sketchup.close(); });
+  window.addEventListener('DOMContentLoaded', function () { sketchup.ready(); });
+</script>
+</body>
+</html>
