@@ -3,6 +3,7 @@
 require 'sketchup.rb'
 require_relative 'fan'
 require_relative 'audit'
+require_relative 'about'
 
 module RALNCS
   unless file_loaded?(__FILE__)
@@ -23,6 +24,8 @@ module RALNCS
     menu = UI.menu('Extensions').add_submenu('RALNCS')
     menu.add_item(cmd_fan)
     menu.add_item(cmd_audit)
+    menu.add_separator
+    menu.add_item('О плагине…') { About.show }
 
     toolbar = UI::Toolbar.new('RALNCS')
     toolbar.add_item(cmd_fan)
