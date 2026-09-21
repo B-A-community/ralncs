@@ -44,11 +44,11 @@ difference, `≥5` — outside the palette.
 
 Release **1.0**: [release page](https://github.com/B-A-community/ralncs/releases/tag/v1.0).
 
-| | Russian UI | English UI |
-|---|---|---|
-| Extension + guide (zip) | [RALNCS-1.0-rus.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-rus.zip) | [RALNCS-1.0-eng.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-eng.zip) |
-| Extension only (rbz) | [RALNCS-1.0-rus.rbz](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-rus.rbz) | [RALNCS-1.0-eng.rbz](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-eng.rbz) |
-| Guide (PDF) | [guide-rus.pdf](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-guide-rus.pdf) | [guide-eng.pdf](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-guide-eng.pdf) |
+| Russian UI | English UI |
+|---|---|
+| [RALNCS-1.0-rus.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-rus.zip) | [RALNCS-1.0-eng.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-eng.zip) |
+
+Each archive contains the `.rbz` extension and a one-page PDF guide.
 
 Install: SketchUp → `Window → Extension Manager → Install Extension` → pick
 the `.rbz` → restart SketchUp.

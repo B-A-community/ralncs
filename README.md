@@ -44,11 +44,11 @@
 
 Релиз **1.0**: [страница релиза](https://github.com/B-A-community/ralncs/releases/tag/v1.0).
 
-| | Русский интерфейс | English UI |
-|---|---|---|
-| Плагин + инструкция (zip) | [RALNCS-1.0-rus.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-rus.zip) | [RALNCS-1.0-eng.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-eng.zip) |
-| Только плагин (rbz) | [RALNCS-1.0-rus.rbz](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-rus.rbz) | [RALNCS-1.0-eng.rbz](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-eng.rbz) |
-| Инструкция (PDF) | [guide-rus.pdf](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-guide-rus.pdf) | [guide-eng.pdf](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-guide-eng.pdf) |
+| Русский интерфейс | English UI |
+|---|---|
+| [RALNCS-1.0-rus.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-rus.zip) | [RALNCS-1.0-eng.zip](https://github.com/B-A-community/ralncs/releases/download/v1.0/RALNCS-1.0-eng.zip) |
+
+В архиве — плагин `.rbz` и краткая инструкция в PDF.
 
 Установка: SketchUp → `Window → Extension Manager → Install Extension` →
 выбрать `.rbz` → перезапустить SketchUp.
