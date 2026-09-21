@@ -1,4 +1,4 @@
-# RALNCS — RAL / NCS extension for SketchUp 2024 / 2025
+# RALNCS — RAL / NCS extension for SketchUp 2024 / 2025 / 2026
 
 [Русский](README.md) · **English**
 
@@ -60,7 +60,7 @@ string lives in `src/ralncs/lang.rb` (Ruby) and `src/ralncs/html/i18n.js`
 - Build: `.\build.ps1` (both languages) or `.\build.ps1 -Lang en` →
   `dist\RALNCS-<version>-rus|eng.rbz`.
 - Development: `.\dev_install.ps1` copies `src\` (Russian) into the SketchUp
-  2024 Plugins folder (`-Version 2025` for 2025); `tools\su_exec.ps1` runs Ruby inside a running SketchUp.
+  2024 Plugins folder (`-Version 2025|2026` for 2025/2026); `tools\su_exec.ps1` runs Ruby inside a running SketchUp.
 
 ## Layout
 
